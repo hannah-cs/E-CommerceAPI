@@ -1,4 +1,4 @@
-package com.startsteps.Final.Project.ECommerce.Models;
+package com.startsteps.Final.Project.ECommerce.Models.Product;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
