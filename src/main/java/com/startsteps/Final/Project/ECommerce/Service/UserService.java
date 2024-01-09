@@ -30,4 +30,13 @@ public class UserService {
         userRepository.save(newUser);
     }
 
+    public boolean authenticateUser(Integer userId, String password) {
+        Optional<User> userOptional =  userRepository.findById(userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            return user.getPassword().equals(password);
+        }
+        return false;
+    }
+
 }
