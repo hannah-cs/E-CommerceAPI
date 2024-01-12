@@ -1,15 +1,22 @@
 package com.startsteps.Final.Project.ECommerce.JWTConfig;
 
 import io.jsonwebtoken.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
+@Component
 public class JwtTokenProvider {
 
     private final String secret;
     private final long expiration;
 
-    public JwtTokenProvider(String secret, long expiration) {
+    @Autowired
+    public JwtTokenProvider(@Value("${jwt.secret}") String secret,
+                            @Value("${jwt.expiration}") long expiration) {
         this.secret = secret;
         this.expiration = expiration;
     }
