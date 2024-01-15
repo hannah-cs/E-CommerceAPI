@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.*;
     private final UserService userService;
     private final AuthService authService;
 
+    public RegistrationController(UserService userService, AuthService authService) {
+        this.userService = userService;
+        this.authService = authService;
+    }
+
     @PostMapping
     public ResponseEntity<String> registerUser(@RequestBody User newUser){
         if (newUser.getUserRole() == UserRole.USER) {
@@ -24,6 +29,5 @@ import org.springframework.web.bind.annotation.*;
         } else {
             return new ResponseEntity<>("Invalid user role", HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>("Failed to create user", HttpStatus.BAD_REQUEST);
     }
 }
