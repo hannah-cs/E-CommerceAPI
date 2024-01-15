@@ -1,8 +1,6 @@
 package com.startsteps.Final.Project.ECommerce.Models.User;
 
-import com.startsteps.Final.Project.ECommerce.Models.Order.Order;
 import jakarta.persistence.*;
-
 import java.util.List;
 
 @Entity
@@ -13,7 +11,8 @@ public class User {
     private String email;
     private String name;
     private String password;
-    List<Order> allOrders;
+    List<String> allOrders;
+    @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
     public User() {
@@ -42,11 +41,11 @@ public class User {
         this.password = password;
     }
 
-    public List<Order> getAllOrders() {
+    public List<String> getAllOrders() {
         return allOrders;
     }
 
-    public void setAllOrders(List<Order> allOrders) {
+    public void setAllOrders(List<String> allOrders) {
         this.allOrders = allOrders;
     }
 
