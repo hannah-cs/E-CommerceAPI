@@ -1,9 +1,6 @@
 package com.startsteps.Final.Project.ECommerce.Models.Product;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
 public class Product {
@@ -14,6 +11,7 @@ public class Product {
     private Integer inStock;
     private double unitCost;
     private double unitPrice;
+    @Enumerated(EnumType.STRING)
     private ProductCategory productCategory;
 
     public Product() {
