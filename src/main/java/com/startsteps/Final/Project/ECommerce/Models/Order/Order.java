@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 import java.util.Map;
 
 @Entity
-@Table(name = "Orders")
+@Table(name = "orders")
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -18,11 +18,12 @@ public class Order {
     private User user;
     private Timestamp orderDate;
     @ElementCollection
-    @CollectionTable(name = "Order_Products", joinColumns = @JoinColumn(name = "orderId"))
-    @MapKeyJoinColumn(name = "productId")
+    @CollectionTable(name = "order_products", joinColumns = @JoinColumn(name = "order_id"))
+    @MapKeyJoinColumn(name = "product_id")
     @Column(name = "quantity")
     private Map<Product, Integer> productQuantityMap;
 
+    @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
     public Order() {
