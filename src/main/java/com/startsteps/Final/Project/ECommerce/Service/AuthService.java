@@ -1,8 +1,8 @@
 package com.startsteps.Final.Project.ECommerce.Service;
 
-import com.startsteps.Final.Project.ECommerce.JWTConfig.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.startsteps.Final.Project.ECommerce.Config.JwtTokenProvider;
 
 import javax.naming.AuthenticationException;
 
