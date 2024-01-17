@@ -1,4 +1,5 @@
 package com.startsteps.Final.Project.ECommerce.security.login.models;
+import com.startsteps.Final.Project.ECommerce.security.login.models.ERole;
 import jakarta.persistence.*;
 @Entity
 @Table(name = "roles")

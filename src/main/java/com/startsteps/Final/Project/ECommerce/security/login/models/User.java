@@ -1,6 +1,8 @@
 package com.startsteps.Final.Project.ECommerce.security.login.models;
 
 import com.startsteps.Final.Project.ECommerce.Models.User.UserRole;
+import com.startsteps.Final.Project.ECommerce.security.login.models.ERole;
+import com.startsteps.Final.Project.ECommerce.security.login.models.Role;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
