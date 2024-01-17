@@ -92,4 +92,16 @@ public class User {
     public void setName(String name) {
         this.name = name;
     }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
+    public void setUserRole(ERole userRole) {
+        this.userRole = userRole;
+    }
 }
