@@ -50,6 +50,22 @@ public class User {
         this.userId = userId;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getPassword() {
         return password;
     }
@@ -66,7 +82,6 @@ public class User {
         this.allOrders = allOrders;
     }
 
-
     public ERole getERole() {
         return eRole;
     }
@@ -79,16 +94,16 @@ public class User {
         return email;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 
-    public String getName() {
-        return name;
+    public ERole getUserRole() {
+        return userRole;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUserRole(ERole userRole) {
+        this.userRole = userRole;
     }
 
     public Set<Role> getRoles() {
