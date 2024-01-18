@@ -1,12 +1,14 @@
 package com.startsteps.Final.Project.ECommerce.security.login.services;
 
-import com.startsteps.Final.Project.ECommerce.security.login.models.User;
-import com.startsteps.Final.Project.ECommerce.security.login.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.startsteps.Final.Project.ECommerce.security.login.models.User;
+import com.startsteps.Final.Project.ECommerce.security.login.repository.UserRepository;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
