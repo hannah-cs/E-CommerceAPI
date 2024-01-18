@@ -12,7 +12,6 @@ import java.util.Set;
                 @UniqueConstraint(columnNames = "userId"),
                 @UniqueConstraint(columnNames = "email")
         })
-
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -29,7 +28,6 @@ public class User {
     private Set<Role> roles = new HashSet<>();
     @Enumerated(EnumType.STRING)
     private ERole eRole;
-
 
     public User() {
     }
@@ -90,22 +88,6 @@ public class User {
         this.eRole = eRole;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
-
-    public ERole getUserRole() {
-        return userRole;
-    }
-
-    public void setUserRole(ERole userRole) {
-        this.userRole = userRole;
-    }
-
     public Set<Role> getRoles() {
         return roles;
     }
@@ -114,23 +96,11 @@ public class User {
         this.roles = roles;
     }
 
-    public void setUserRole(ERole userRole) {
-        this.eRole = userRole;
-    }
-
     public String getUsername() {
         return username;
     }
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public ERole geteRole() {
-        return eRole;
-    }
-
-    public void seteRole(ERole eRole) {
-        this.eRole = eRole;
     }
 }
