@@ -1,8 +1,5 @@
 package com.startsteps.Final.Project.ECommerce.security.login.models;
 
-import com.startsteps.Final.Project.ECommerce.Models.User.UserRole;
-import com.startsteps.Final.Project.ECommerce.security.login.models.ERole;
-import com.startsteps.Final.Project.ECommerce.security.login.models.Role;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
@@ -20,6 +17,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer userId;
+    private String username;
     private String email;
     private String name;
     private String password;
@@ -30,19 +28,18 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
     @Enumerated(EnumType.STRING)
-    private ERole userRole;
+    private ERole eRole;
 
 
     public User() {
     }
 
-    public User(String email, String name, String password, ERole eRole) {
+    public User(String email, String username, String password, Set<Role> roles) {
         this.email = email;
-        this.name = name;
+        this.name = username;
         this.password = password;
-        Role role = new Role(eRole);
-        this.roles.add(role);
-        this.userRole = eRole;
+        this.roles = roles;
+        this.eRole = ERole.ROLE_USER;
     }
 
     public Integer getUserId() {
@@ -69,12 +66,13 @@ public class User {
         this.allOrders = allOrders;
     }
 
-    public UserRole getUserRole() {
-        return userRole;
+
+    public ERole getERole() {
+        return eRole;
     }
 
-    public void setUserRole(UserRole userRole) {
-        this.userRole = userRole;
+    public void setERole(ERole eRole) {
+        this.eRole = eRole;
     }
 
     public String getEmail() {
@@ -102,6 +100,22 @@ public class User {
     }
 
     public void setUserRole(ERole userRole) {
-        this.userRole = userRole;
+        this.eRole = userRole;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public ERole geteRole() {
+        return eRole;
+    }
+
+    public void seteRole(ERole eRole) {
+        this.eRole = eRole;
     }
 }
