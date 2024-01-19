@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class DatabaseManager {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/ECommerceAPIProject";
+    private static final String URL = "jdbc:mysql://localhost:3306/ECommerceAPI";
     private static final String USER = System.getenv("USERNAME");
     private static final String PASSWORD = System.getenv("PASSWORD");
 
