@@ -43,13 +43,5 @@ public class SignupRequest {
     public void setPassword(String password) {
         this.password = password;
     }
-
-    public Set<String> getRole() {
-        return this.role;
-    }
-
-    public void setRole(Set<String> role) {
-        this.role = role;
-    }
 }
 
