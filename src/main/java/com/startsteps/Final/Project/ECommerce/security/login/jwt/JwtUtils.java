@@ -56,7 +56,7 @@ public class JwtUtils {
     }
 
     private Key key() {
-        return Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
     public boolean validateJwtToken(String authToken) {

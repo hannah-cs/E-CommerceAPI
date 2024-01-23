@@ -15,6 +15,7 @@ import com.startsteps.Final.Project.ECommerce.security.login.payload.response.Us
 import com.startsteps.Final.Project.ECommerce.security.login.repository.RoleRepository;
 import com.startsteps.Final.Project.ECommerce.security.login.repository.UserRepository;
 import com.startsteps.Final.Project.ECommerce.security.login.services.UserDetailsImpl;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -93,5 +94,17 @@ public class AuthController {
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(new MessageResponse("You've been signed out!"));
     }
+
+    @GetMapping("/profile")
+    public String getUserProfile(HttpServletRequest request) {
+        String jwt = jwtUtils.getJwtFromCookies(request);
+        if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+            String username = jwtUtils.getUserNameFromJwtToken(jwt);
+            return "Logged in as " + username;
+        } else {
+            return "User not authenticated";
+        }
+    }
+
 
 }
