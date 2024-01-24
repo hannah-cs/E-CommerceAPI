@@ -139,4 +139,33 @@ public class AuthController {
             return ResponseEntity.badRequest().body(new MessageResponse("You must be logged in to access this feature."));
         }
     }
+
+    @PutMapping("/removeAdmin/{id}")
+    public ResponseEntity<?> removeAdmin(@PathVariable("id") Integer id, HttpServletRequest request, Authentication authentication){
+        String jwt = jwtUtils.getJwtFromCookies(request);
+        if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+            String username = jwtUtils.getUserNameFromJwtToken(jwt);
+            User user = userRepository.findByUsername(username).orElse(null);
+            if (user != null && user.getERole().equals(ERole.ROLE_ADMIN)) {
+                User toMakeAdmin = userRepository.findById(id).orElse(null);
+                if (toMakeAdmin != null) {
+                    if (toMakeAdmin.getERole().equals(ERole.ROLE_ADMIN)) {
+                        userService.setERoleAndRoles(id, ERole.ROLE_USER);
+                        return ResponseEntity.ok().body(new MessageResponse("Removed admin privileges for user " + toMakeAdmin.getUsername() + "."));
+                    } else {
+                        return ResponseEntity.ok().body(new MessageResponse("User " + toMakeAdmin.getUsername() + " does not have admin privileges."));
+                    }
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(new MessageResponse("User not found with id: " + id));
+                }}
+            else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new MessageResponse("You must be an admin to perform this action."));
+            }
+        }
+        else {
+            return ResponseEntity.badRequest().body(new MessageResponse("You must be logged in to access this feature."));
+        }
+    }
 }
