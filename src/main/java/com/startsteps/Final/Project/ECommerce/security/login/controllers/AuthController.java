@@ -16,6 +16,7 @@ import com.startsteps.Final.Project.ECommerce.security.login.payload.response.Us
 import com.startsteps.Final.Project.ECommerce.security.login.repository.RoleRepository;
 import com.startsteps.Final.Project.ECommerce.security.login.repository.UserRepository;
 import com.startsteps.Final.Project.ECommerce.security.login.services.UserDetailsImpl;
+import com.startsteps.Final.Project.ECommerce.security.login.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,9 @@ public class AuthController {
 
     @Autowired
     RoleRepository roleRepository;
+
+    @Autowired
+    UserService userService;
 
     @Autowired
     PasswordEncoder encoder;
@@ -114,9 +118,19 @@ public class AuthController {
             String username = jwtUtils.getUserNameFromJwtToken(jwt);
             User user = userRepository.findByUsername(username).orElse(null);
             if (user != null && user.getERole().equals(ERole.ROLE_ADMIN)) {
-                // TODO: make admin
-                return ResponseEntity.ok().body(new MessageResponse("User granted admin privileges."));
-            } else {
+                User toMakeAdmin = userRepository.findById(id).orElse(null);
+                if (toMakeAdmin != null) {
+                    if (!toMakeAdmin.getERole().equals(ERole.ROLE_ADMIN)) {
+                        userService.setERoleAndRoles(id, ERole.ROLE_ADMIN);
+                        return ResponseEntity.ok().body(new MessageResponse("User " + toMakeAdmin.getUsername() + " granted admin privileges."));
+                    } else {
+                        return ResponseEntity.ok().body(new MessageResponse("User " + toMakeAdmin.getUsername() + " already has admin privileges."));
+                    }
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(new MessageResponse("User not found with id: " + id));
+                }}
+            else {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(new MessageResponse("You must be an admin to perform this action."));
             }
@@ -125,6 +139,4 @@ public class AuthController {
             return ResponseEntity.badRequest().body(new MessageResponse("You must be logged in to access this feature."));
         }
     }
-
-
 }
