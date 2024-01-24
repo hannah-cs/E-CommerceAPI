@@ -116,12 +116,11 @@ public class AuthController {
         String jwt = jwtUtils.getJwtFromCookies(request);
         if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
             String username = jwtUtils.getUserNameFromJwtToken(jwt);
-            User user = userRepository.findByUsername(username).orElse(null);
-            if (user != null && user.getERole().equals(ERole.ROLE_ADMIN)) {
+            if (userService.isAdmin(username)){
                 User toMakeAdmin = userRepository.findById(id).orElse(null);
                 if (toMakeAdmin != null) {
-                    if (!toMakeAdmin.getERole().equals(ERole.ROLE_ADMIN)) {
-                        userService.setERoleAndRoles(id, ERole.ROLE_ADMIN);
+                    if (!userService.isAdmin(toMakeAdmin.getUsername())) {
+                        userService.makeAdmin(id);
                         return ResponseEntity.ok().body(new MessageResponse("User " + toMakeAdmin.getUsername() + " granted admin privileges."));
                     } else {
                         return ResponseEntity.ok().body(new MessageResponse("User " + toMakeAdmin.getUsername() + " already has admin privileges."));

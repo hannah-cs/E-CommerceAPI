@@ -29,4 +29,19 @@ public class UserService {
         }
     }
 
+    public boolean isAdmin(String username){
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user != null && user.getERole().equals(ERole.ROLE_ADMIN)) {
+            return true;
+        }
+        return false;
+    }
+
+    public void makeAdmin(Integer userId){
+        User user = userRepository.findById(userId).orElse(null);
+        if (!user.getERole().equals(ERole.ROLE_ADMIN)){
+            setERoleAndRoles(userId, ERole.ROLE_ADMIN);
+        }
+    }
+
 }
