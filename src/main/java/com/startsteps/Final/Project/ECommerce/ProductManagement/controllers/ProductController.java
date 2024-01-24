@@ -33,7 +33,6 @@ public class ProductController {
         String jwt = jwtUtils.getJwtFromCookies(request);
         if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
             String username = jwtUtils.getUserNameFromJwtToken(jwt);
-            System.out.println(username);
             User user = userRepository.findByUsername(username).orElse(null);
             if (user != null){
                 return ResponseEntity.ok().body(new MessageResponse(productService.getAllProducts().toString()));
@@ -50,7 +49,6 @@ public class ProductController {
         String jwt = jwtUtils.getJwtFromCookies(request);
         if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
             String username = jwtUtils.getUserNameFromJwtToken(jwt);
-            System.out.println(username);
             User user = userRepository.findByUsername(username).orElse(null);
             if (user != null){
                 productService.createProduct(newProduct);
