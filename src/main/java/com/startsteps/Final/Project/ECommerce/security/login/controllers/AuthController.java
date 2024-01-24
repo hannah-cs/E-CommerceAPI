@@ -1,4 +1,5 @@
 package com.startsteps.Final.Project.ECommerce.security.login.controllers;
+import java.security.Principal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,6 +16,7 @@ import com.startsteps.Final.Project.ECommerce.security.login.payload.response.Us
 import com.startsteps.Final.Project.ECommerce.security.login.repository.RoleRepository;
 import com.startsteps.Final.Project.ECommerce.security.login.repository.UserRepository;
 import com.startsteps.Final.Project.ECommerce.security.login.services.UserDetailsImpl;
+import com.startsteps.Final.Project.ECommerce.security.login.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,9 @@ public class AuthController {
 
     @Autowired
     RoleRepository roleRepository;
+
+    @Autowired
+    UserService userService;
 
     @Autowired
     PasswordEncoder encoder;
@@ -102,9 +107,64 @@ public class AuthController {
             String username = jwtUtils.getUserNameFromJwtToken(jwt);
             return "Logged in as " + username;
         } else {
-            return "User not authenticated";
+            return "You must be logged in to access this feature.";
         }
     }
 
+    @PutMapping("/grantAdmin/{id}")
+    public ResponseEntity<?> makeAdmin(@PathVariable("id") Integer id, HttpServletRequest request, Authentication authentication){
+        String jwt = jwtUtils.getJwtFromCookies(request);
+        if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+            String username = jwtUtils.getUserNameFromJwtToken(jwt);
+            if (userService.isAdmin(username)){
+                User toMakeAdmin = userRepository.findById(id).orElse(null);
+                if (toMakeAdmin != null) {
+                    if (!userService.isAdmin(toMakeAdmin.getUsername())) {
+                        userService.makeAdmin(id);
+                        return ResponseEntity.ok().body(new MessageResponse("User " + toMakeAdmin.getUsername() + " granted admin privileges."));
+                    } else {
+                        return ResponseEntity.ok().body(new MessageResponse("User " + toMakeAdmin.getUsername() + " already has admin privileges."));
+                    }
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(new MessageResponse("User not found with id: " + id));
+                }}
+            else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new MessageResponse("You must be an admin to perform this action."));
+            }
+        }
+        else {
+            return ResponseEntity.badRequest().body(new MessageResponse("You must be logged in to access this feature."));
+        }
+    }
 
+    @PutMapping("/removeAdmin/{id}")
+    public ResponseEntity<?> removeAdmin(@PathVariable("id") Integer id, HttpServletRequest request, Authentication authentication){
+        String jwt = jwtUtils.getJwtFromCookies(request);
+        if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+            String username = jwtUtils.getUserNameFromJwtToken(jwt);
+            User user = userRepository.findByUsername(username).orElse(null);
+            if (user != null && user.getERole().equals(ERole.ROLE_ADMIN)) {
+                User toMakeAdmin = userRepository.findById(id).orElse(null);
+                if (toMakeAdmin != null) {
+                    if (toMakeAdmin.getERole().equals(ERole.ROLE_ADMIN)) {
+                        userService.setERoleAndRoles(id, ERole.ROLE_USER);
+                        return ResponseEntity.ok().body(new MessageResponse("Removed admin privileges for user " + toMakeAdmin.getUsername() + "."));
+                    } else {
+                        return ResponseEntity.ok().body(new MessageResponse("User " + toMakeAdmin.getUsername() + " does not have admin privileges."));
+                    }
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(new MessageResponse("User not found with id: " + id));
+                }}
+            else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new MessageResponse("You must be an admin to perform this action."));
+            }
+        }
+        else {
+            return ResponseEntity.badRequest().body(new MessageResponse("You must be logged in to access this feature."));
+        }
+    }
 }
