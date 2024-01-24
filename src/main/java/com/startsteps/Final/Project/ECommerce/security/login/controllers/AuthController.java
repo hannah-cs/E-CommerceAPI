@@ -1,4 +1,5 @@
 package com.startsteps.Final.Project.ECommerce.security.login.controllers;
+import java.security.Principal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -102,7 +103,26 @@ public class AuthController {
             String username = jwtUtils.getUserNameFromJwtToken(jwt);
             return "Logged in as " + username;
         } else {
-            return "User not authenticated";
+            return "You must be logged in to access this feature.";
+        }
+    }
+
+    @PutMapping("/grantAdmin/{id}")
+    public ResponseEntity<?> makeAdmin(@PathVariable("id") Integer id, HttpServletRequest request, Authentication authentication){
+        String jwt = jwtUtils.getJwtFromCookies(request);
+        if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+            String username = jwtUtils.getUserNameFromJwtToken(jwt);
+            User user = userRepository.findByUsername(username).orElse(null);
+            if (user != null && user.getERole().equals(ERole.ROLE_ADMIN)) {
+                // TODO: make admin
+                return ResponseEntity.ok().body(new MessageResponse("User granted admin privileges."));
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new MessageResponse("You must be an admin to perform this action."));
+            }
+        }
+        else {
+            return ResponseEntity.badRequest().body(new MessageResponse("You must be logged in to access this feature."));
         }
     }
 
