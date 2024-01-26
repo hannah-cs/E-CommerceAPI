@@ -34,4 +34,15 @@ public class ProductController {
         productService.createProduct(newProduct);
         return ResponseEntity.ok().body(new MessageResponse("Product added to database."));
     }
+
+    @PutMapping
+    public ResponseEntity<?> updateProduct(HttpServletRequest request, @RequestBody Product updatedProduct){
+        productService.updateProduct(updatedProduct.getProductId(), updatedProduct);
+        return ResponseEntity.ok().body(new MessageResponse("Product updated."));
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable("id") Integer id, HttpServletRequest request){
+        productService.deleteProduct(id);
+    }
 }
