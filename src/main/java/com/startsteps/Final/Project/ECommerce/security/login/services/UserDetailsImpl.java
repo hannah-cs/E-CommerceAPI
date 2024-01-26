@@ -1,14 +1,13 @@
 package com.startsteps.Final.Project.ECommerce.security.login.services;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.startsteps.Final.Project.ECommerce.security.login.models.ERole;
 import com.startsteps.Final.Project.ECommerce.security.login.models.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class UserDetailsImpl implements UserDetails {
@@ -22,32 +21,37 @@ public class UserDetailsImpl implements UserDetails {
 
     @JsonIgnore
     private String password;
+    private ERole eRole;
     private Collection<? extends GrantedAuthority> authorities;
 
     public UserDetailsImpl(Integer id, String username, String email, String password,
-                           Collection<? extends GrantedAuthority> authorities) {
+                           Collection<? extends GrantedAuthority> authorities, ERole eRole) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.authorities = authorities;
+        this.eRole = eRole;
     }
 
     public UserDetailsImpl() {
     }
 
     public static UserDetailsImpl build(User user) {
-        List<GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName().name()))
-                .collect(Collectors.toList());
+        Set<GrantedAuthority> authorities = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_"+role.getName().name()))
+                .collect(Collectors.toSet());
 
+        authorities.add(new SimpleGrantedAuthority("ROLE_"+user.getERole().name()));
         return new UserDetailsImpl(
                 user.getUserId(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getPassword(),
-                authorities);
+                authorities,
+                user.getERole());
     }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;

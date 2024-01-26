@@ -1,5 +1,6 @@
 package com.startsteps.Final.Project.ECommerce.security.login;
 
+import com.startsteps.Final.Project.ECommerce.security.login.models.ERole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,8 +8,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,9 +23,17 @@ import com.startsteps.Final.Project.ECommerce.security.login.jwt.AuthEntryPointJ
 import com.startsteps.Final.Project.ECommerce.security.login.jwt.AuthTokenFilter;
 import com.startsteps.Final.Project.ECommerce.security.login.services.UserDetailsServiceImpl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 @Configuration
-@EnableMethodSecurity
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(WebSecurityConfig.class);
+
 
     @Autowired
     UserDetailsServiceImpl userDetailsService;
@@ -38,7 +49,7 @@ public class WebSecurityConfig {
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService((UserDetailsService) userDetailsService);
+        authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
 
         return authProvider;
@@ -59,16 +70,24 @@ public class WebSecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/auth/**").permitAll()
-                                .requestMatchers("/api/test/**").permitAll()
-                                .anyRequest().authenticated()
+                .authorizeHttpRequests(auth -> {
+                            auth.requestMatchers("/api/auth/**").permitAll()
+                                    .requestMatchers("/api/test/**").permitAll();
+                            auth.anyRequest().authenticated();
+                        }
                 );
+
 
         http.headers(headers -> headers.frameOptions(frameOption -> frameOption.sameOrigin()));
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
+
         return http.build();
     }
+
+
+
+
+
 }

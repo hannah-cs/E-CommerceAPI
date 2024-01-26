@@ -31,16 +31,13 @@ public class UserService {
 
     public boolean isAdmin(String username){
         User user = userRepository.findByUsername(username).orElse(null);
-        if (user != null && user.getERole().equals(ERole.ROLE_ADMIN)) {
-            return true;
-        }
-        return false;
+        return user != null && user.getERole().equals(ERole.ADMIN);
     }
 
     public void makeAdmin(Integer userId){
         User user = userRepository.findById(userId).orElse(null);
-        if (!user.getERole().equals(ERole.ROLE_ADMIN)){
-            setERoleAndRoles(userId, ERole.ROLE_ADMIN);
+        if (!user.getERole().equals(ERole.ADMIN)){
+            setERoleAndRoles(userId, ERole.ADMIN);
         }
     }
 

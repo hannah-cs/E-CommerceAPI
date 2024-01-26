@@ -6,7 +6,7 @@ public class UserInfoResponse {
     private Integer id;
     private String username;
     private String email;
-    private List<String> roles;
+    private final List<String> roles;
 
     public UserInfoResponse(Integer id, String username, String email, List<String> roles) {
         this.id = id;

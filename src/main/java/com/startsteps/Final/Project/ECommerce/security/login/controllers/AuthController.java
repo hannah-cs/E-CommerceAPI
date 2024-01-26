@@ -2,6 +2,7 @@ package com.startsteps.Final.Project.ECommerce.security.login.controllers;
 import java.security.Principal;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,7 @@ import com.startsteps.Final.Project.ECommerce.security.login.repository.RoleRepo
 import com.startsteps.Final.Project.ECommerce.security.login.repository.UserRepository;
 import com.startsteps.Final.Project.ECommerce.security.login.services.UserDetailsImpl;
 import com.startsteps.Final.Project.ECommerce.security.login.services.UserService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -105,66 +109,35 @@ public class AuthController {
         String jwt = jwtUtils.getJwtFromCookies(request);
         if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
             String username = jwtUtils.getUserNameFromJwtToken(jwt);
-            return "Logged in as " + username;
+            Optional<User> user = userRepository.findByUsername(username);
+            return user.toString();
         } else {
             return "You must be logged in to access this feature.";
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/grantAdmin/{id}")
-    public ResponseEntity<?> makeAdmin(@PathVariable("id") Integer id, HttpServletRequest request, Authentication authentication){
-        String jwt = jwtUtils.getJwtFromCookies(request);
-        if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-            String username = jwtUtils.getUserNameFromJwtToken(jwt);
-            if (userService.isAdmin(username)){
-                User toMakeAdmin = userRepository.findById(id).orElse(null);
-                if (toMakeAdmin != null) {
-                    if (!userService.isAdmin(toMakeAdmin.getUsername())) {
-                        userService.makeAdmin(id);
-                        return ResponseEntity.ok().body(new MessageResponse("User " + toMakeAdmin.getUsername() + " granted admin privileges."));
-                    } else {
-                        return ResponseEntity.ok().body(new MessageResponse("User " + toMakeAdmin.getUsername() + " already has admin privileges."));
-                    }
-                } else {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body(new MessageResponse("User not found with id: " + id));
-                }}
-            else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(new MessageResponse("You must be an admin to perform this action."));
-            }
-        }
-        else {
-            return ResponseEntity.badRequest().body(new MessageResponse("You must be logged in to access this feature."));
+    public ResponseEntity<?> makeAdmin(@PathVariable("id") Integer id, HttpServletRequest request) {
+        User toMakeAdmin = userRepository.findById(id).orElse(null);
+        if (toMakeAdmin != null) {
+            userService.makeAdmin(id);
+            return ResponseEntity.ok().body(new MessageResponse("User " + toMakeAdmin.getUsername() + " granted admin privileges."));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("User not found with id: " + id));
         }
     }
 
     @PutMapping("/removeAdmin/{id}")
-    public ResponseEntity<?> removeAdmin(@PathVariable("id") Integer id, HttpServletRequest request, Authentication authentication){
-        String jwt = jwtUtils.getJwtFromCookies(request);
-        if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-            String username = jwtUtils.getUserNameFromJwtToken(jwt);
-            User user = userRepository.findByUsername(username).orElse(null);
-            if (user != null && user.getERole().equals(ERole.ROLE_ADMIN)) {
-                User toMakeAdmin = userRepository.findById(id).orElse(null);
-                if (toMakeAdmin != null) {
-                    if (toMakeAdmin.getERole().equals(ERole.ROLE_ADMIN)) {
-                        userService.setERoleAndRoles(id, ERole.ROLE_USER);
-                        return ResponseEntity.ok().body(new MessageResponse("Removed admin privileges for user " + toMakeAdmin.getUsername() + "."));
-                    } else {
-                        return ResponseEntity.ok().body(new MessageResponse("User " + toMakeAdmin.getUsername() + " does not have admin privileges."));
-                    }
-                } else {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body(new MessageResponse("User not found with id: " + id));
-                }}
-            else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(new MessageResponse("You must be an admin to perform this action."));
-            }
-        }
-        else {
-            return ResponseEntity.badRequest().body(new MessageResponse("You must be logged in to access this feature."));
+    public ResponseEntity<?> removeAdmin(@PathVariable("id") Integer id) {
+        User toRemoveAdmin = userRepository.findById(id).orElse(null);
+        if (toRemoveAdmin != null) {
+            userService.setERoleAndRoles(id, ERole.USER);
+            return ResponseEntity.ok().body(new MessageResponse("Removed admin privileges for user " + toRemoveAdmin.getUsername() + "."));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("User not found with id: " + id));
         }
     }
 }
