@@ -30,4 +30,16 @@ public class ProductService {
         productRepository.save(newProduct);
     }
 
+    public void updateProduct(int id, Product updatedProduct){
+        Product product = productRepository.findById(id).orElse(null);
+        product.setProductName(updatedProduct.getProductName());
+        product.setStockCount(updatedProduct.getStockCount());
+        product.setDescription(updatedProduct.getDescription());
+        product.setUnitPrice(updatedProduct.getUnitPrice());
+    }
+
+    public void deleteProduct(int id){
+        productRepository.deleteById(id);
+    }
+
 }
