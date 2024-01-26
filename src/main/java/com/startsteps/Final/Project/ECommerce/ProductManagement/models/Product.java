@@ -68,7 +68,7 @@ public class Product {
 
     @Override
     public String toString(){
-        return "Product "+productId+": "+productName + ", " +description +
-                ". " +stockCount+" in stock at €"+unitPrice+" each.";
+        return "{Product "+productId+": "+productName + ", " +description +
+                ". " +stockCount+" in stock at €"+unitPrice+" each. Total stock value €"+(unitPrice*stockCount)+"}";
     }
 }
