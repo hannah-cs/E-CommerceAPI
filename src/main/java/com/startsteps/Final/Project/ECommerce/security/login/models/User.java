@@ -2,9 +2,8 @@ package com.startsteps.Final.Project.ECommerce.security.login.models;
 
 import jakarta.persistence.*;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users",
@@ -36,7 +35,7 @@ public class User {
         this.email = email;
         this.username = username;
         this.password = password;
-        this.eRole = ERole.ROLE_USER;
+        this.eRole = ERole.USER;
     }
 
     public Integer getUserId() {
@@ -101,5 +100,13 @@ public class User {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    @Override
+    public String toString(){
+        List<String> rolesStr = roles.stream()
+                .map(role -> role.getName().toString())
+                .collect(Collectors.toList());
+        return "User id "+userId+", username:" + username+". Roles: "+rolesStr+" and ERole: "+this.getERole();
     }
 }

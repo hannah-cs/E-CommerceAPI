@@ -33,5 +33,6 @@ public class Role {
     public void setName(ERole name) {
         this.name = name;
     }
+
 }
 
