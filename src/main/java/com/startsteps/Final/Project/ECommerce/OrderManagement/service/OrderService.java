@@ -8,10 +8,12 @@ import com.startsteps.Final.Project.ECommerce.OrderManagement.repository.OrderRe
 import com.startsteps.Final.Project.ECommerce.ProductManagement.models.Product;
 import com.startsteps.Final.Project.ECommerce.security.login.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -138,6 +140,23 @@ public class OrderService {
                 System.out.println("Order shipped successfully.");
             } else {
                 System.out.println("Error: order cancelled or already shipped");
+            }
+        }
+    }
+
+    // auto mark orders as completed if not returned within 30 days of shipping
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void completeShippedOrders() {
+        List<Order> deliveredOrders = orderRepository.findByOrderStatus(OrderStatus.SHIPPED);
+        for (Order order : deliveredOrders) {
+            LocalDateTime shipDate = order.getShipDate();
+            LocalDateTime currentDate = LocalDateTime.now();
+            long daysDifference = ChronoUnit.DAYS.between(shipDate, currentDate);
+            int daysThreshold = 30;
+            if (daysDifference >= daysThreshold) {
+                order.setOrderStatus(OrderStatus.COMPLETED);
+                orderRepository.save(order);
+                System.out.println("Order " + order.getOrderId() + " automatically marked as completed. Return window closed.");
             }
         }
     }
