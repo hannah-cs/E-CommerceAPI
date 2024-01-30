@@ -29,8 +29,7 @@ public class Order {
     public Order() {
     }
 
-    public Order(Date orderDate, Integer userId, OrderStatus orderStatus) {
-        this.orderDate = orderDate;
+    public Order(Integer userId, OrderStatus orderStatus) {
         this.userId = userId;
         this.orderStatus = orderStatus;
     }
@@ -96,5 +95,13 @@ public class Order {
         }
 
         return totalPrice;
+    }
+
+    @Override
+    public String toString(){
+        return "Order number "+orderId+" placed "+orderDate+
+                "\nOrder status: "+orderStatus.toString()+
+                "\nContaining: "+
+                productsOrders;
     }
 }
