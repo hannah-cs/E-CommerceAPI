@@ -1,5 +1,7 @@
-package com.startsteps.Final.Project.ECommerce.ProductManagement.models;
+package com.startsteps.Final.Project.ECommerce.OrderManagement.models;
 
+import com.startsteps.Final.Project.ECommerce.OrderManagement.models.Order;
+import com.startsteps.Final.Project.ECommerce.ProductManagement.models.Product;
 import jakarta.persistence.*;
 
 @Entity

@@ -1,4 +1,4 @@
-package com.startsteps.Final.Project.ECommerce.ProductManagement.models;
+package com.startsteps.Final.Project.ECommerce.OrderManagement.models;
 
 import jakarta.persistence.*;
 
