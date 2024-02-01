@@ -129,6 +129,7 @@ public class AuthController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/removeAdmin/{id}")
     public ResponseEntity<?> removeAdmin(@PathVariable("id") Integer id) {
         User toRemoveAdmin = userRepository.findById(id).orElse(null);
