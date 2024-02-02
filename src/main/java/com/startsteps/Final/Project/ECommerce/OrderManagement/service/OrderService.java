@@ -37,15 +37,14 @@ public class OrderService {
     }
 
     public Order viewCart(Integer userId) {
-        return loadUserOrdersWithStatus(userId, OrderStatus.IN_CART)
-                .stream()
-                .findFirst()
+        return orderRepository.findFirstByUserIdAndOrderStatus(userId, OrderStatus.IN_CART)
                 .orElse(null);
     }
 
 
     public boolean hasCart(Integer userId) {
-        return !loadUserOrdersWithStatus(userId, OrderStatus.IN_CART).isEmpty();
+        return orderRepository.findFirstByUserIdAndOrderStatus(userId, OrderStatus.IN_CART)
+                .isPresent();
     }
 
     public List<Order> getAllOrders(){
