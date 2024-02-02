@@ -30,30 +30,18 @@ public class JwtUtils {
     @Value("${startsteps.app.jwtCookieName}")
     private String jwtCookie;
 
-    private int userId;
-
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-
     public String getJwtFromCookies(HttpServletRequest request) {
         Cookie cookie = WebUtils.getCookie(request, jwtCookie);
-        if (cookie != null) {
-            return cookie.getValue();
-        } else {
-            return null;
-        }
+        return cookie != null ? cookie.getValue() : null;
     }
 
     public ResponseCookie generateJwtCookie(UserDetailsImpl userPrincipal) {
-        String jwt = generateTokenFromUsername(userPrincipal.getUsername());
-        ResponseCookie cookie = ResponseCookie.from(jwtCookie, jwt).path("/api").maxAge(24 * 60 * 60).httpOnly(true).build();
-        return cookie;
+        String jwt = generateTokenFromUsername(userPrincipal.getUsername(), userPrincipal.getId());
+        return ResponseCookie.from(jwtCookie, jwt).path("/api").maxAge(24 * 60 * 60).httpOnly(true).build();
     }
 
     public ResponseCookie getCleanJwtCookie() {
-        ResponseCookie cookie = ResponseCookie.from(jwtCookie, null).path("/api").build();
-        return cookie;
+        return ResponseCookie.from(jwtCookie, null).path("/api").build();
     }
 
     public String getUserNameFromJwtToken(String token) {
@@ -82,7 +70,7 @@ public class JwtUtils {
         return false;
     }
 
-    public String generateTokenFromUsername(String username) {
+    public String generateTokenFromUsername(String username, int userId) {
         return Jwts.builder()
                 .setSubject(username)
                 .claim("userId", userId)
@@ -94,7 +82,6 @@ public class JwtUtils {
 
     public int getUserIdFromJwtToken(String token) {
         Claims claims = Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(token).getBody();
-        return Integer.parseInt(claims.get("userId", String.class));
+        return claims.get("userId", Integer.class);
     }
-
 }
