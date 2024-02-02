@@ -202,4 +202,30 @@ public class OrderController {
                     .body(new MessageResponse("Error returning the order."));
         }
     }
+
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<?> deleteOrder(@PathVariable int orderId) {
+        try {
+            orderService.deleteOrder(orderId);
+            return ResponseEntity.ok().body(new MessageResponse("Order deleted successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error deleting the order."));
+        }
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PostMapping("/create")
+    public ResponseEntity<?> createOrder(@RequestBody Order newOrder) {
+        try {
+            orderService.createOrder(newOrder);
+            return ResponseEntity.ok().body(new MessageResponse("Order created successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error creating the order."));
+        }
+    }
+
+
 }
