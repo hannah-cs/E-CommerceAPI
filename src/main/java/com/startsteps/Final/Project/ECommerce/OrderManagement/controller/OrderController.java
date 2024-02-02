@@ -1,6 +1,8 @@
 package com.startsteps.Final.Project.ECommerce.OrderManagement.controller;
 
 
+import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InvalidOrderStateException;
+import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.OrderNotFoundException;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.Order;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.OrderStatus;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.ProductsOrders;
@@ -155,6 +157,24 @@ public class OrderController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new MessageResponse("Error cancelling the order."));
+        }
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PostMapping("/{orderId}/ship")
+    public ResponseEntity<?> shipOrder(@PathVariable int orderId) {
+        try {
+            orderService.shipOrder(orderId);
+            return ResponseEntity.ok().body(new MessageResponse("Order shipped successfully."));
+        } catch (OrderNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("No order found with id " + orderId));
+        } catch (InvalidOrderStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse("Error: order cancelled or already shipped"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error shipping the order."));
         }
     }
 }
