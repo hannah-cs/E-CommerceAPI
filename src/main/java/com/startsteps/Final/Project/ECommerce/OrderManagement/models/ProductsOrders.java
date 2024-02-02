@@ -1,5 +1,6 @@
 package com.startsteps.Final.Project.ECommerce.OrderManagement.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.Order;
 import com.startsteps.Final.Project.ECommerce.ProductManagement.models.Product;
 import jakarta.persistence.*;
@@ -16,6 +17,7 @@ public class ProductsOrders {
     private Integer productsOrderId;
     @ManyToOne
     @JoinColumn(name = "orderId", nullable = false)
+    @JsonIgnoreProperties("productsOrders")
     private Order order;
     @ManyToOne
     @JoinColumn(name = "productId", nullable = false)
