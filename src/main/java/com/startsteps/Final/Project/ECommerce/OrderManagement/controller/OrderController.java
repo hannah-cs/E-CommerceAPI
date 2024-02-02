@@ -113,6 +113,48 @@ public class OrderController {
         }
     }
 
+    @PutMapping("/{orderId}")
+    public ResponseEntity<?> updateOrder(
+            @PathVariable int orderId,
+            @RequestBody Order updatedOrder,
+            HttpServletRequest request
+    ) {
+        int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
+        Order order = orderService.loadOrderById(orderId);
+        if (order.getUserId()!=userId) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new MessageResponse("You are not authorized to update this order."));
+        }
+        try {
+            orderService.updateOrder(orderId, updatedOrder);
+            return ResponseEntity.ok().body(new MessageResponse("Order updated successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error updating the order."));
+        }
+    }
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<?> cancelOrder(
+            @PathVariable int orderId,
+            HttpServletRequest request
+    ) {
+        int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
+        Order order = orderService.loadOrderById(orderId);
 
-
+        if (order == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("No order found with id " + orderId));
+        }
+        if (order.getUserId() != userId) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new MessageResponse("You are not authorized to cancel this order."));
+        }
+        try {
+            orderService.cancelOrder(orderId);
+            return ResponseEntity.ok().body(new MessageResponse("Order cancelled successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error cancelling the order."));
+        }
+    }
 }

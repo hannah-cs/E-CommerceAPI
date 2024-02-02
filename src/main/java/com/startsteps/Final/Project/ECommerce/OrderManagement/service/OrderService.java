@@ -63,6 +63,7 @@ public class OrderService {
         Order order = orderRepository.findById(id).orElse(null);
         order.setOrderDate(updatedOrder.getOrderDate());
         order.setOrderStatus(updatedOrder.getOrderStatus());
+        orderRepository.save(order);
     }
 
     public void deleteOrder(int id){
@@ -99,7 +100,7 @@ public class OrderService {
                 System.out.println("Order has already been shipped. Cannot be cancelled.");
             } else {
                 order.setOrderStatus(OrderStatus.CANCELLED);
-                order.setOrderDate(LocalDateTime.now());
+                orderRepository.save(order);
                 System.out.println("Order cancelled successfully.");
             }
         }
@@ -112,6 +113,7 @@ public class OrderService {
         } else {
             if (order.getOrderStatus() == OrderStatus.SHIPPED){
                 order.setOrderStatus(OrderStatus.RETURNED);
+                orderRepository.save(order);
                 System.out.println("Return process started successfully.");
             } else if (order.getOrderStatus() == OrderStatus.COMPLETED){
                 System.out.println("Error: return window exceeded");
@@ -130,6 +132,7 @@ public class OrderService {
             if (order.getOrderStatus() == OrderStatus.PROCESSING){
                 order.setOrderStatus(OrderStatus.SHIPPED);
                 order.setShipDate(LocalDateTime.now());
+                orderRepository.save(order);
                 System.out.println("Order shipped successfully.");
             } else {
                 System.out.println("Error: order cancelled or already shipped");
