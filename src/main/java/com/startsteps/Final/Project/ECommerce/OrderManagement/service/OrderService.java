@@ -10,6 +10,8 @@ import com.startsteps.Final.Project.ECommerce.ProductManagement.models.Product;
 import com.startsteps.Final.Project.ECommerce.ProductManagement.repository.ProductRepository;
 import com.startsteps.Final.Project.ECommerce.security.login.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,13 +33,12 @@ public class OrderService {
         return optionalOrder.orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
     }
 
-    public List<Order> loadOrdersByUser(Integer userId) throws OrderNotFoundException {
-        List<Order> orders = orderRepository.findByUserId(userId);
-        return orders;
+    public Page<Order> loadOrdersByUser(Integer userId, Pageable pageable) throws OrderNotFoundException {
+        return orderRepository.findByUserId(userId, pageable);
     }
 
-    public List<Order> loadUserOrdersWithStatus(Integer userId, OrderStatus status) {
-        return orderRepository.findByUserIdAndOrderStatus(userId, status);
+    public Page<Order> loadUserOrdersWithStatus(Integer userId, OrderStatus status, Pageable pageable) throws OrderNotFoundException {
+        return orderRepository.findByUserIdAndOrderStatus(userId, status, pageable);
     }
 
     public Order viewCart(Integer userId) {
@@ -51,8 +52,8 @@ public class OrderService {
                 .isPresent();
     }
 
-    public List<Order> getAllOrders(){
-        return orderRepository.findAll();
+    public Page<Order> getAllOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable);
     }
 
     public void createOrder(Order newOrder){
