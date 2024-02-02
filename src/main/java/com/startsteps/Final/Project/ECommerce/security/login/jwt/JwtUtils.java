@@ -30,6 +30,12 @@ public class JwtUtils {
     @Value("${startsteps.app.jwtCookieName}")
     private String jwtCookie;
 
+    private int userId;
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
     public String getJwtFromCookies(HttpServletRequest request) {
         Cookie cookie = WebUtils.getCookie(request, jwtCookie);
         if (cookie != null) {
@@ -79,9 +85,16 @@ public class JwtUtils {
     public String generateTokenFromUsername(String username) {
         return Jwts.builder()
                 .setSubject(username)
+                .claim("userId", userId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
+    public int getUserIdFromJwtToken(String token) {
+        Claims claims = Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(token).getBody();
+        return Integer.parseInt(claims.get("userId", String.class));
+    }
+
 }

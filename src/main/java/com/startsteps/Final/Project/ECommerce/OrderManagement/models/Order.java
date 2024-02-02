@@ -1,7 +1,9 @@
 package com.startsteps.Final.Project.ECommerce.OrderManagement.models;
 
 import jakarta.persistence.*;
+import org.springframework.cglib.core.Local;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -16,7 +18,8 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer orderId;
 
-    private Date orderDate;
+    private LocalDateTime orderDate;
+    private LocalDateTime shipDate;
 
     private Integer userId;
 
@@ -29,8 +32,7 @@ public class Order {
     public Order() {
     }
 
-    public Order(Date orderDate, Integer userId, OrderStatus orderStatus) {
-        this.orderDate = orderDate;
+    public Order(Integer userId, OrderStatus orderStatus) {
         this.userId = userId;
         this.orderStatus = orderStatus;
     }
@@ -43,11 +45,11 @@ public class Order {
         this.orderId = orderId;
     }
 
-    public Date getOrderDate() {
+    public LocalDateTime getOrderDate() {
         return orderDate;
     }
 
-    public void setOrderDate(Date orderDate) {
+    public void setOrderDate(LocalDateTime orderDate) {
         this.orderDate = orderDate;
     }
 
@@ -65,6 +67,14 @@ public class Order {
 
     public void setOrderStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
+    }
+
+    public LocalDateTime getShipDate() {
+        return shipDate;
+    }
+
+    public void setShipDate(LocalDateTime shipDate) {
+        this.shipDate = shipDate;
     }
 
     public List<ProductsOrders> getProductsOrders() {
@@ -96,5 +106,13 @@ public class Order {
         }
 
         return totalPrice;
+    }
+
+    @Override
+    public String toString(){
+        return "Order number "+orderId+" placed "+orderDate+
+                "\nOrder status: "+orderStatus.toString()+
+                "\nContaining: "+
+                productsOrders;
     }
 }
