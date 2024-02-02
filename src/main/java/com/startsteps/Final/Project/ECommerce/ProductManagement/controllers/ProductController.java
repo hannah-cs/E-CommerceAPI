@@ -8,6 +8,8 @@ import com.startsteps.Final.Project.ECommerce.security.login.payload.response.Me
 import com.startsteps.Final.Project.ECommerce.security.login.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +28,9 @@ public class ProductController {
     JwtUtils jwtUtils;
 
     @GetMapping
-    public ResponseEntity<?> getAllProducts(HttpServletRequest request){
-        return ResponseEntity.ok().body(new MessageResponse(productService.getAllProducts().toString()));
+    public ResponseEntity<?> getAllProducts(HttpServletRequest request, Pageable pageable) {
+        Page<Product> products = productService.getAllProducts(pageable);
+        return ResponseEntity.ok().body(products.getContent());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN')")

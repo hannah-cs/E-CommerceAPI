@@ -6,6 +6,8 @@ import com.startsteps.Final.Project.ECommerce.ProductManagement.repository.Produ
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,8 +24,8 @@ public class ProductService {
         return optionalProduct.orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + productId));
     }
 
-    public List<Product> getAllProducts(){
-        return productRepository.findAll();
+    public Page<Product> getAllProducts(Pageable pageable) {
+        return productRepository.findAll(pageable);
     }
 
     public void createProduct(Product newProduct){

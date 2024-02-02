@@ -1,5 +1,6 @@
 package com.startsteps.Final.Project.ECommerce.OrderManagement.service;
 
+import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InvalidOrderStateException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.OrderNotFoundException;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.Order;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.OrderStatus;
@@ -9,6 +10,8 @@ import com.startsteps.Final.Project.ECommerce.ProductManagement.models.Product;
 import com.startsteps.Final.Project.ECommerce.ProductManagement.repository.ProductRepository;
 import com.startsteps.Final.Project.ECommerce.security.login.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,13 +33,12 @@ public class OrderService {
         return optionalOrder.orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
     }
 
-    public List<Order> loadOrdersByUser(Integer userId) throws OrderNotFoundException {
-        List<Order> orders = orderRepository.findByUserId(userId);
-        return orders;
+    public Page<Order> loadOrdersByUser(Integer userId, Pageable pageable) throws OrderNotFoundException {
+        return orderRepository.findByUserId(userId, pageable);
     }
 
-    public List<Order> loadUserOrdersWithStatus(Integer userId, OrderStatus status) {
-        return orderRepository.findByUserIdAndOrderStatus(userId, status);
+    public Page<Order> loadUserOrdersWithStatus(Integer userId, OrderStatus status, Pageable pageable) throws OrderNotFoundException {
+        return orderRepository.findByUserIdAndOrderStatus(userId, status, pageable);
     }
 
     public Order viewCart(Integer userId) {
@@ -50,8 +52,8 @@ public class OrderService {
                 .isPresent();
     }
 
-    public List<Order> getAllOrders(){
-        return orderRepository.findAll();
+    public Page<Order> getAllOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable);
     }
 
     public void createOrder(Order newOrder){
@@ -63,6 +65,7 @@ public class OrderService {
         Order order = orderRepository.findById(id).orElse(null);
         order.setOrderDate(updatedOrder.getOrderDate());
         order.setOrderStatus(updatedOrder.getOrderStatus());
+        orderRepository.save(order);
     }
 
     public void deleteOrder(int id){
@@ -99,24 +102,30 @@ public class OrderService {
                 System.out.println("Order has already been shipped. Cannot be cancelled.");
             } else {
                 order.setOrderStatus(OrderStatus.CANCELLED);
-                order.setOrderDate(LocalDateTime.now());
+                orderRepository.save(order);
                 System.out.println("Order cancelled successfully.");
             }
         }
     }
 
-    public void returnOrder(int orderId){
+    public void returnOrder(int orderId) {
         Order order = orderRepository.findById(orderId).orElse(null);
-        if (order == null){
-            System.out.println("No order found with id "+orderId);
+        if (order == null) {
+            throw new OrderNotFoundException("No order found with id " + orderId);
         } else {
-            if (order.getOrderStatus() == OrderStatus.SHIPPED){
+            if (order.getOrderStatus() == OrderStatus.SHIPPED) {
                 order.setOrderStatus(OrderStatus.RETURNED);
-                System.out.println("Return process started successfully.");
-            } else if (order.getOrderStatus() == OrderStatus.COMPLETED){
-                System.out.println("Error: return window exceeded");
+                orderRepository.save(order);
+            } else if (order.getOrderStatus() == OrderStatus.COMPLETED) {
+                throw new InvalidOrderStateException("Error: return window exceeded");
+            } else if (order.getOrderStatus() == OrderStatus.CANCELLED) {
+                throw new InvalidOrderStateException("Error: this is a cancelled order");
+            } else if (order.getOrderStatus() == OrderStatus.RETURNED) {
+                throw new InvalidOrderStateException("This order is already in the return process.");
+            } else if (order.getOrderStatus() == OrderStatus.PROCESSING) {
+                throw new InvalidOrderStateException("This order has not yet been shipped. Please cancel instead.");
             } else {
-                System.out.println("Error: return could not be processed. Double check order status.");
+                throw new InvalidOrderStateException("Error: return could not be processed. Double-check order status.");
             }
         }
     }
@@ -130,6 +139,7 @@ public class OrderService {
             if (order.getOrderStatus() == OrderStatus.PROCESSING){
                 order.setOrderStatus(OrderStatus.SHIPPED);
                 order.setShipDate(LocalDateTime.now());
+                orderRepository.save(order);
                 System.out.println("Order shipped successfully.");
             } else {
                 System.out.println("Error: order cancelled or already shipped");

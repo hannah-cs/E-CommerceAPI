@@ -1,6 +1,8 @@
 package com.startsteps.Final.Project.ECommerce.OrderManagement.controller;
 
 
+import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InvalidOrderStateException;
+import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.OrderNotFoundException;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.Order;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.OrderStatus;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.ProductsOrders;
@@ -15,6 +17,10 @@ import com.startsteps.Final.Project.ECommerce.security.login.repository.UserRepo
 import com.startsteps.Final.Project.ECommerce.security.login.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -43,8 +49,13 @@ public class OrderController {
 
     @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/all")
-    public ResponseEntity<?> getAllOrders(HttpServletRequest request) {
-        return ResponseEntity.ok().body(new MessageResponse(orderService.getAllOrders().toString()));
+    public ResponseEntity<?> getAllOrders(
+            HttpServletRequest request,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Order> orders = orderService.getAllOrders(pageable);
+        return ResponseEntity.ok().body(new MessageResponse(orders.getContent().toString()));
     }
 
 
@@ -52,17 +63,20 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<?> getMyOrders(
             HttpServletRequest request,
-            @RequestParam(required = false) OrderStatus status) {
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
         int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
-        List<Order> orders;
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Order> orders;
         if (status != null) {
-            orders = orderService.loadUserOrdersWithStatus(userId, status);
+            orders = orderService.loadUserOrdersWithStatus(userId, status, pageable);
         } else {
-            orders = orderService.loadOrdersByUser(userId);
+            orders = orderService.loadOrdersByUser(userId, pageable);
         }
 
-
-        return ResponseEntity.ok().body(new MessageResponse(orders.toString()));
+        return ResponseEntity.ok().body(new MessageResponse(orders.getContent().toString()));
     }
 
 
@@ -113,6 +127,117 @@ public class OrderController {
         }
     }
 
+    @PutMapping("/{orderId}")
+    public ResponseEntity<?> updateOrder(
+            @PathVariable int orderId,
+            @RequestBody Order updatedOrder,
+            HttpServletRequest request
+    ) {
+        int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
+        Order order = orderService.loadOrderById(orderId);
+        if (order.getUserId()!=userId) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new MessageResponse("You are not authorized to update this order."));
+        }
+        try {
+            orderService.updateOrder(orderId, updatedOrder);
+            return ResponseEntity.ok().body(new MessageResponse("Order updated successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error updating the order."));
+        }
+    }
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<?> cancelOrder(
+            @PathVariable int orderId,
+            HttpServletRequest request
+    ) {
+        int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
+        Order order = orderService.loadOrderById(orderId);
+
+        if (order == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("No order found with id " + orderId));
+        }
+        if (order.getUserId() != userId) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new MessageResponse("You are not authorized to cancel this order."));
+        }
+        try {
+            orderService.cancelOrder(orderId);
+            return ResponseEntity.ok().body(new MessageResponse("Order cancelled successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error cancelling the order."));
+        }
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PostMapping("/{orderId}/ship")
+    public ResponseEntity<?> shipOrder(@PathVariable int orderId) {
+        try {
+            orderService.shipOrder(orderId);
+            return ResponseEntity.ok().body(new MessageResponse("Order shipped successfully."));
+        } catch (OrderNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("No order found with id " + orderId));
+        } catch (InvalidOrderStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse("Error: order cancelled or already shipped"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error shipping the order."));
+        }
+    }
+
+    @PostMapping("/{orderId}/return")
+    public ResponseEntity<?> returnOrder(@PathVariable int orderId, HttpServletRequest request) {
+        int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
+        Order order = orderService.loadOrderById(orderId);
+
+        if (order == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("No order found with id " + orderId));
+        }
+        if (order.getUserId() != userId) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new MessageResponse("You are not authorized to return this order."));
+        }
+        try {
+            orderService.returnOrder(orderId);
+            return ResponseEntity.ok().body(new MessageResponse("Return process successfully started."));
+        } catch (InvalidOrderStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error returning the order."));
+        }
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<?> deleteOrder(@PathVariable int orderId) {
+        try {
+            orderService.deleteOrder(orderId);
+            return ResponseEntity.ok().body(new MessageResponse("Order deleted successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error deleting the order."));
+        }
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PostMapping("/create")
+    public ResponseEntity<?> createOrder(@RequestBody Order newOrder) {
+        try {
+            orderService.createOrder(newOrder);
+            return ResponseEntity.ok().body(new MessageResponse("Order created successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error creating the order."));
+        }
+    }
 
 
 }
