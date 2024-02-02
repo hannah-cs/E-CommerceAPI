@@ -177,4 +177,29 @@ public class OrderController {
                     .body(new MessageResponse("Error shipping the order."));
         }
     }
+
+    @PostMapping("/{orderId}/return")
+    public ResponseEntity<?> returnOrder(@PathVariable int orderId, HttpServletRequest request) {
+        int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
+        Order order = orderService.loadOrderById(orderId);
+
+        if (order == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("No order found with id " + orderId));
+        }
+        if (order.getUserId() != userId) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new MessageResponse("You are not authorized to return this order."));
+        }
+        try {
+            orderService.returnOrder(orderId);
+            return ResponseEntity.ok().body(new MessageResponse("Return process successfully started."));
+        } catch (InvalidOrderStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error returning the order."));
+        }
+    }
 }

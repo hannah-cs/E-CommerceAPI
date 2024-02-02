@@ -1,5 +1,6 @@
 package com.startsteps.Final.Project.ECommerce.OrderManagement.service;
 
+import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InvalidOrderStateException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.OrderNotFoundException;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.Order;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.OrderStatus;
@@ -106,19 +107,24 @@ public class OrderService {
         }
     }
 
-    public void returnOrder(int orderId){
+    public void returnOrder(int orderId) {
         Order order = orderRepository.findById(orderId).orElse(null);
-        if (order == null){
-            System.out.println("No order found with id "+orderId);
+        if (order == null) {
+            throw new OrderNotFoundException("No order found with id " + orderId);
         } else {
-            if (order.getOrderStatus() == OrderStatus.SHIPPED){
+            if (order.getOrderStatus() == OrderStatus.SHIPPED) {
                 order.setOrderStatus(OrderStatus.RETURNED);
                 orderRepository.save(order);
-                System.out.println("Return process started successfully.");
-            } else if (order.getOrderStatus() == OrderStatus.COMPLETED){
-                System.out.println("Error: return window exceeded");
+            } else if (order.getOrderStatus() == OrderStatus.COMPLETED) {
+                throw new InvalidOrderStateException("Error: return window exceeded");
+            } else if (order.getOrderStatus() == OrderStatus.CANCELLED) {
+                throw new InvalidOrderStateException("Error: this is a cancelled order");
+            } else if (order.getOrderStatus() == OrderStatus.RETURNED) {
+                throw new InvalidOrderStateException("This order is already in the return process.");
+            } else if (order.getOrderStatus() == OrderStatus.PROCESSING) {
+                throw new InvalidOrderStateException("This order has not yet been shipped. Please cancel instead.");
             } else {
-                System.out.println("Error: return could not be processed. Double check order status.");
+                throw new InvalidOrderStateException("Error: return could not be processed. Double-check order status.");
             }
         }
     }
