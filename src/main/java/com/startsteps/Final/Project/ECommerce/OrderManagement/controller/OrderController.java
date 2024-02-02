@@ -17,6 +17,10 @@ import com.startsteps.Final.Project.ECommerce.security.login.repository.UserRepo
 import com.startsteps.Final.Project.ECommerce.security.login.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,8 +49,13 @@ public class OrderController {
 
     @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/all")
-    public ResponseEntity<?> getAllOrders(HttpServletRequest request) {
-        return ResponseEntity.ok().body(new MessageResponse(orderService.getAllOrders().toString()));
+    public ResponseEntity<?> getAllOrders(
+            HttpServletRequest request,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Order> orders = orderService.getAllOrders(pageable);
+        return ResponseEntity.ok().body(new MessageResponse(orders.getContent().toString()));
     }
 
 
@@ -54,17 +63,20 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<?> getMyOrders(
             HttpServletRequest request,
-            @RequestParam(required = false) OrderStatus status) {
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
         int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
-        List<Order> orders;
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Order> orders;
         if (status != null) {
-            orders = orderService.loadUserOrdersWithStatus(userId, status);
+            orders = orderService.loadUserOrdersWithStatus(userId, status, pageable);
         } else {
-            orders = orderService.loadOrdersByUser(userId);
+            orders = orderService.loadOrdersByUser(userId, pageable);
         }
 
-
-        return ResponseEntity.ok().body(new MessageResponse(orders.toString()));
+        return ResponseEntity.ok().body(new MessageResponse(orders.getContent().toString()));
     }
 
 
