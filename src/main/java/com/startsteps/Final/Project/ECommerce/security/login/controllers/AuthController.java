@@ -105,16 +105,26 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public String getUserProfile(HttpServletRequest request) {
+    public ResponseEntity<?> getUserProfile(HttpServletRequest request) {
         String jwt = jwtUtils.getJwtFromCookies(request);
         if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
             String username = jwtUtils.getUserNameFromJwtToken(jwt);
-            Optional<User> user = userRepository.findByUsername(username);
-            return user.toString();
+            Optional<User> userOptional = userRepository.findByUsername(username);
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+                String userProfile = String.format("Logged in as %s (user ID: %d), with roles %s",
+                        user.getUsername(), user.getUserId(), user.getRoles().toString());
+                return ResponseEntity.ok().body(userProfile);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("User not found");
+            }
         } else {
-            return "You must be logged in to access this feature.";
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("You must be logged in to access this feature.");
         }
     }
+
 
     @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/grantAdmin/{id}")
@@ -135,7 +145,7 @@ public class AuthController {
         User toRemoveAdmin = userRepository.findById(id).orElse(null);
         if (toRemoveAdmin != null) {
             userService.setERoleAndRoles(id, ERole.USER);
-            return ResponseEntity.ok().body(new MessageResponse("Removed admin privileges for user " + toRemoveAdmin.getUsername() + "."));
+            return ResponseEntity.ok().body(new MessageResponse("Removed admin privileges from user " + toRemoveAdmin.getUsername() + "."));
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new MessageResponse("User not found with id: " + id));
