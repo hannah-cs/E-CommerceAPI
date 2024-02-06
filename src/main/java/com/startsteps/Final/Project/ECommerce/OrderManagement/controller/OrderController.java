@@ -29,7 +29,9 @@ import org.springframework.web.bind.annotation.*;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -138,13 +140,32 @@ public class OrderController {
         Order cart = orderService.viewCart(userId);
 
         if (cart != null) {
-            CartResponse cartResponse = new CartResponse("In cart:", cart.getProductsOrders());
-            String cartItemsString = cartResponse.toString();
-            return ResponseEntity.ok().body(new MessageResponse(cartItemsString));
+            List<Map<String, Object>> items = new ArrayList<>();
+            double totalPrice = 0.0;
+
+            for (ProductsOrders po : cart.getProductsOrders()) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("productName", po.getProduct().getProductName());
+                item.put("unitPrice", po.getProduct().getUnitPrice());
+                item.put("quantity", po.getQuantity());
+                double itemTotalPrice = po.getProduct().getUnitPrice() * po.getQuantity();
+                item.put("subtotal", String.format("%.2f", itemTotalPrice));
+                items.add(item);
+                totalPrice += itemTotalPrice;
+            }
+
+            String formattedTotalPrice = String.format("%.2f", totalPrice);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("totalPrice", formattedTotalPrice);
+            response.put("items", items);
+            return ResponseEntity.ok().body(response);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok().body("You have no items in your cart.");
         }
     }
+
+
 
     @PutMapping("/{orderId}")
     public ResponseEntity<?> updateOrder(
