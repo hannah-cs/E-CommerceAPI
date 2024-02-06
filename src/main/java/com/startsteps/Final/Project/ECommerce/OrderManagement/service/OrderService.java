@@ -91,6 +91,20 @@ public class OrderService {
         orderRepository.save(existingOrder);
     }
 
+    @Transactional
+    public void removeFromCart(int userId, int productId) {
+        Order existingOrder = orderRepository.findByUserIdAndOrderStatus(userId, OrderStatus.IN_CART)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No cart found for this user"));
+        ProductsOrders productsOrders = existingOrder.getProductsOrders().stream()
+                .filter(po -> po.getProduct().getProductId() == productId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Product not found in cart"));
+        existingOrder.removeProductOrder(productsOrders);
+        orderRepository.save(existingOrder);
+    }
+
     public void cancelOrder(int orderId){
         Order order = orderRepository.findById(orderId).orElse(null);
         if (order == null){

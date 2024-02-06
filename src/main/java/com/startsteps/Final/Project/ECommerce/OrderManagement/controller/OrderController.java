@@ -113,6 +113,18 @@ public class OrderController {
         }
     }
 
+    @PostMapping("/remove")
+    public ResponseEntity<?> removeFromCart(HttpServletRequest request, @RequestBody CartRequest cartRequest) {
+        try {
+            int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
+            orderService.removeFromCart(userId, cartRequest.getProductId());
+            return ResponseEntity.ok().body(new MessageResponse("Product removed from cart successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error removing product from the cart."));
+        }
+    }
+
     @GetMapping("/cart")
     public ResponseEntity<?> getCart(HttpServletRequest request) {
         int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
