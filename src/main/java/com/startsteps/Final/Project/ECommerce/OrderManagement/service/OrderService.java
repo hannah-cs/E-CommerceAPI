@@ -150,6 +150,12 @@ public class OrderService {
             throw new OrderNotFoundException("No order found with id " + orderId);
         } else {
             if (order.getOrderStatus() == OrderStatus.SHIPPED) {
+                for (ProductsOrders productsOrders : order.getProductsOrders()) {
+                    Product product = productsOrders.getProduct();
+                    int returnedQuantity = productsOrders.getQuantity();
+                    product.setStockCount(product.getStockCount() + returnedQuantity); // Increase the stock count
+                    productRepository.save(product);
+                }
                 order.setOrderStatus(OrderStatus.RETURNED);
                 orderRepository.save(order);
             } else if (order.getOrderStatus() == OrderStatus.COMPLETED) {
