@@ -3,6 +3,7 @@ package com.startsteps.Final.Project.ECommerce.OrderManagement.controller;
 
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InvalidOrderStateException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.OrderNotFoundException;
+import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.ProductNotFoundException;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.Order;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.OrderStatus;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.ProductsOrders;
@@ -107,9 +108,12 @@ public class OrderController {
             int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
             orderService.addToCart(userId, cartRequest.getProductId(), cartRequest.getQuantity());
             return ResponseEntity.ok().body(new MessageResponse("Product added to the cart successfully."));
+        } catch (ProductNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("No product found with product id "+cartRequest.getProductId()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("Error adding product to the cart."));
+                    .body(new MessageResponse("Error adding product to cart."));
         }
     }
 
@@ -119,7 +123,10 @@ public class OrderController {
             int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
             orderService.removeFromCart(userId, cartRequest.getProductId());
             return ResponseEntity.ok().body(new MessageResponse("Product removed from cart successfully."));
-        } catch (Exception e) {
+        } catch (ProductNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("Product id "+cartRequest.getProductId()+" doesn't exist or is not in cart"));
+        }catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new MessageResponse("Error removing product from the cart."));
         }

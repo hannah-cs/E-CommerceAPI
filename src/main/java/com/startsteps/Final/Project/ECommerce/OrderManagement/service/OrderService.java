@@ -2,6 +2,7 @@ package com.startsteps.Final.Project.ECommerce.OrderManagement.service;
 
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InvalidOrderStateException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.OrderNotFoundException;
+import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.ProductNotFoundException;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.Order;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.OrderStatus;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.ProductsOrders;
@@ -84,12 +85,13 @@ public class OrderService {
                 });
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
 
         ProductsOrders productsOrders = new ProductsOrders(existingOrder, product, quantity);
         existingOrder.addProductOrder(productsOrders);
         orderRepository.save(existingOrder);
     }
+
 
     @Transactional
     public void removeFromCart(int userId, int productId) {
@@ -100,7 +102,7 @@ public class OrderService {
         ProductsOrders productsOrders = existingOrder.getProductsOrders().stream()
                 .filter(po -> po.getProduct().getProductId() == productId)
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Product not found in cart"));
+                .orElseThrow(() -> new ProductNotFoundException("Product not found in cart"));
         existingOrder.removeProductOrder(productsOrders);
         orderRepository.save(existingOrder);
     }
