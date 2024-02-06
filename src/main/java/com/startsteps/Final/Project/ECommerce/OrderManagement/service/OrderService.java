@@ -1,5 +1,6 @@
 package com.startsteps.Final.Project.ECommerce.OrderManagement.service;
 
+import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InsufficientStockException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InvalidOrderStateException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.OrderNotFoundException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.ProductNotFoundException;
@@ -192,13 +193,27 @@ public class OrderService {
         }
     }
 
+    @Transactional
     public void checkoutOrder(int orderId) {
         Order order = orderRepository.findById(orderId).orElse(null);
-
         if (order != null && order.getOrderStatus() == OrderStatus.IN_CART) {
+            List<ProductsOrders> productOrders = order.getProductsOrders();
+            for (ProductsOrders po : productOrders) {
+                Product product = po.getProduct();
+                int orderedQuantity = po.getQuantity();
+                int availableQuantity = product.getStockCount();
+
+                if (orderedQuantity > availableQuantity) {
+                    throw new InsufficientStockException("Insufficient stock for product: " + product.getProductName());
+                }
+                product.setStockCount(availableQuantity - orderedQuantity);
+                productRepository.save(product);
+            }
+
             order.setOrderStatus(OrderStatus.PROCESSING);
             order.setOrderDate(LocalDateTime.now());
             orderRepository.save(order);
         }
     }
+
 }
