@@ -104,12 +104,18 @@ public class OrderService {
         Order existingOrder = orderRepository.findByUserIdAndOrderStatus(userId, OrderStatus.IN_CART)
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No cart found for this user"));
-        ProductsOrders productsOrders = existingOrder.getProductsOrders().stream()
+                .orElseGet(() -> {
+                    Order newOrder = new Order(userId, OrderStatus.IN_CART);
+                    orderRepository.save(newOrder);
+                    return newOrder;
+                });
+        ProductsOrders existingProductOrder = existingOrder.getProductsOrders().stream()
                 .filter(po -> po.getProduct().getProductId() == productId)
                 .findFirst()
-                .orElseThrow(() -> new ProductNotFoundException("Product not found in cart"));
-        existingOrder.removeProductOrder(productsOrders);
+                .orElse(null);
+        if (existingProductOrder != null) {
+            existingProductOrder.setQuantity(existingProductOrder.getQuantity()-1);
+        }
         orderRepository.save(existingOrder);
     }
 
