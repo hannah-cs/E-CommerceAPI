@@ -83,12 +83,18 @@ public class OrderService {
                     orderRepository.save(newOrder);
                     return newOrder;
                 });
-
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
-
-        ProductsOrders productsOrders = new ProductsOrders(existingOrder, product, quantity);
-        existingOrder.addProductOrder(productsOrders);
+        ProductsOrders existingProductOrder = existingOrder.getProductsOrders().stream()
+                .filter(po -> po.getProduct().getProductId() == productId)
+                .findFirst()
+                .orElse(null);
+        if (existingProductOrder != null) {
+            existingProductOrder.setQuantity(existingProductOrder.getQuantity() + quantity);
+        } else {
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+            ProductsOrders newProductOrder = new ProductsOrders(existingOrder, product, quantity);
+            existingOrder.addProductOrder(newProductOrder);
+        }
         orderRepository.save(existingOrder);
     }
 
