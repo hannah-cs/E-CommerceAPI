@@ -76,6 +76,12 @@ public class OrderService {
 
     @Transactional
     public void addToCart(int userId, int productId, int quantity) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+        if (product.getStockCount() < quantity) {
+            throw new InsufficientStockException("Insufficient stock for " + product.getProductName()+". Only "+product.getStockCount()+" available.");
+        }
+
         Order existingOrder = orderRepository.findByUserIdAndOrderStatus(userId, OrderStatus.IN_CART)
                 .stream()
                 .findFirst()
@@ -84,20 +90,21 @@ public class OrderService {
                     orderRepository.save(newOrder);
                     return newOrder;
                 });
+
         ProductsOrders existingProductOrder = existingOrder.getProductsOrders().stream()
                 .filter(po -> po.getProduct().getProductId() == productId)
                 .findFirst()
                 .orElse(null);
+
         if (existingProductOrder != null) {
             existingProductOrder.setQuantity(existingProductOrder.getQuantity() + quantity);
         } else {
-            Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new ProductNotFoundException("Product not found"));
             ProductsOrders newProductOrder = new ProductsOrders(existingOrder, product, quantity);
             existingOrder.addProductOrder(newProductOrder);
         }
         orderRepository.save(existingOrder);
     }
+
 
 
     @Transactional
