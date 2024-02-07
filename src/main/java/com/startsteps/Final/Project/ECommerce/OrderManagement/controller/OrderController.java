@@ -254,6 +254,9 @@ public class OrderController {
                     .body(new MessageResponse("You are not authorized to cancel this order."));
         }
         try {
+            if (order.getOrderStatus() == OrderStatus.CANCELLED){
+                return ResponseEntity.ok().body(new MessageResponse("Order already cancelled."));
+            }
             orderService.cancelOrder(orderId);
             return ResponseEntity.ok().body(new MessageResponse("Order cancelled successfully."));
         } catch (Exception e) {
@@ -311,9 +314,9 @@ public class OrderController {
         try {
             orderService.deleteOrder(orderId);
             return ResponseEntity.ok().body(new MessageResponse("Order deleted successfully."));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("Error deleting the order."));
+        } catch (OrderNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("No order found with id "+orderId+". It may have already been deleted."));
         }
     }
 

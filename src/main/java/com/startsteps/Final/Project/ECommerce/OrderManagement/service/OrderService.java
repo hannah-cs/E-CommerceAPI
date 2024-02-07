@@ -11,9 +11,12 @@ import com.startsteps.Final.Project.ECommerce.OrderManagement.repository.OrderRe
 import com.startsteps.Final.Project.ECommerce.ProductManagement.models.Product;
 import com.startsteps.Final.Project.ECommerce.ProductManagement.repository.ProductRepository;
 import com.startsteps.Final.Project.ECommerce.security.login.models.User;
+import com.startsteps.Final.Project.ECommerce.security.login.payload.response.MessageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,8 +73,12 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    public void deleteOrder(int id){
-        orderRepository.deleteById(id);
+    public void deleteOrder(int id) throws OrderNotFoundException {
+        if (orderRepository.existsById(id)){
+            orderRepository.deleteById(id);
+        } else {
+            throw new OrderNotFoundException("No order found with id "+id);
+        }
     }
 
     @Transactional
@@ -173,10 +180,10 @@ public class OrderService {
     }
 
     // for admins
-    public void shipOrder(int orderId){
+    public void shipOrder(int orderId) throws OrderNotFoundException, InvalidOrderStateException {
         Order order = orderRepository.findById(orderId).orElse(null);
         if (order == null){
-            System.out.println("No order found with id "+orderId);
+            throw new OrderNotFoundException("No order found with id " + orderId);
         } else {
             if (order.getOrderStatus() == OrderStatus.PROCESSING){
                 order.setOrderStatus(OrderStatus.SHIPPED);
@@ -184,7 +191,7 @@ public class OrderService {
                 orderRepository.save(order);
                 System.out.println("Order shipped successfully.");
             } else {
-                System.out.println("Error: order cancelled or already shipped");
+                throw new InvalidOrderStateException("Error: order cancelled or already shipped");
             }
         }
     }
