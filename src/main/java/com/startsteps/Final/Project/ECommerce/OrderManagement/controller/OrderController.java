@@ -59,8 +59,24 @@ public class OrderController {
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Order> orders = orderService.getAllOrders(pageable);
-        return ResponseEntity.ok().body(new MessageResponse(orders.getContent().toString()));
+
+        List<Map<String, Object>> orderList = orders.getContent().stream()
+                .map(order -> {
+                    Map<String, Object> orderJson = new HashMap<>();
+                    orderJson.put("orderNumber", order.getOrderId());
+                    orderJson.put("user", order.getUserId());
+                    orderJson.put("orderDate", order.getOrderDate());
+                    orderJson.put("orderStatus", order.getOrderStatus());
+                    orderJson.put("products", order.getProductsOrders().toString());
+                    String formattedTotalPrice = String.format("%.2f", order.calculateTotalPrice());
+                    orderJson.put("totalPrice", formattedTotalPrice);
+                    return orderJson;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok().body(orderList);
     }
+
 
 
     //accepts status param e.g. ?status=PROCESSING to filter orders by status. returns all if none propvided
@@ -76,11 +92,40 @@ public class OrderController {
         Page<Order> orders;
         if (status != null) {
             orders = orderService.loadUserOrdersWithStatus(userId, status, pageable);
+            List<Map<String, Object>> orderList = orders.getContent().stream()
+                    .map(order -> {
+                        Map<String, Object> orderJson = new HashMap<>();
+                        orderJson.put("orderNumber", order.getOrderId());
+                        orderJson.put("user", order.getUserId());
+                        orderJson.put("orderDate", order.getOrderDate());
+                        orderJson.put("orderStatus", order.getOrderStatus());
+                        orderJson.put("products", order.getProductsOrders().toString());
+                        String formattedTotalPrice = String.format("%.2f", order.calculateTotalPrice());
+                        orderJson.put("totalPrice", formattedTotalPrice);
+                        return orderJson;
+                    })
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok().body(orderList);
         } else {
             orders = orderService.loadOrdersByUser(userId, pageable);
+            List<Map<String, Object>> orderList = orders.getContent().stream()
+                    .map(order -> {
+                        Map<String, Object> orderJson = new HashMap<>();
+                        orderJson.put("orderNumber", order.getOrderId());
+                        orderJson.put("orderDate", order.getOrderDate());
+                        orderJson.put("shipDate:", order.getShipDate());
+                        orderJson.put("orderStatus", order.getOrderStatus());
+                        orderJson.put("products", order.getProductsOrders().toString());
+                        String formattedTotalPrice = String.format("%.2f", order.calculateTotalPrice());
+                        orderJson.put("totalPrice", formattedTotalPrice);
+                        return orderJson;
+                    })
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok().body(orderList);
         }
 
-        return ResponseEntity.ok().body(new MessageResponse(orders.getContent().toString()));
     }
 
 
