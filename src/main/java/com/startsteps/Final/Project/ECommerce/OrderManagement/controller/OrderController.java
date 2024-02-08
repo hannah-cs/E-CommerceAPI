@@ -57,10 +57,9 @@ public class OrderController {
             HttpServletRequest request,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Order> orders = orderService.getAllOrders(pageable);
-        return ResponseEntity.ok().body(new MessageResponse(orders.getContent().toString()));
+        return orderService.getAllOrders(page, size);
     }
+
 
 
     //accepts status param e.g. ?status=PROCESSING to filter orders by status. returns all if none propvided
@@ -72,35 +71,14 @@ public class OrderController {
             @RequestParam(defaultValue = "10") int size) {
 
         int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Order> orders;
-        if (status != null) {
-            orders = orderService.loadUserOrdersWithStatus(userId, status, pageable);
-        } else {
-            orders = orderService.loadOrdersByUser(userId, pageable);
-        }
-
-        return ResponseEntity.ok().body(new MessageResponse(orders.getContent().toString()));
+        return orderService.getMyOrders(userId, status, page, size);
     }
 
 
     @PutMapping("/checkout")
     public ResponseEntity<?> checkoutCart(HttpServletRequest request) {
         int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
-        if (orderService.hasCart(userId)) {
-            Order cart = orderService.viewCart(userId);
-            if (cart != null) {
-                int cartId = cart.getOrderId();
-                orderService.checkoutOrder(cartId);
-                return ResponseEntity.ok().body(new MessageResponse("Order placed successfully."));
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(new MessageResponse("Error processing the order."));
-            }
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new MessageResponse("Add items to cart before checking out."));
-        }
+        return orderService.checkoutOrder(userId);
     }
 
 
@@ -142,36 +120,12 @@ public class OrderController {
     @GetMapping("/cart")
     public ResponseEntity<?> getCart(HttpServletRequest request) {
         int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
-        Order cart = orderService.viewCart(userId);
-
-        if (cart != null) {
-            List<Map<String, Object>> items = new ArrayList<>();
-            double totalPrice = 0.0;
-
-            for (ProductsOrders po : cart.getProductsOrders()) {
-                Map<String, Object> item = new HashMap<>();
-                item.put("productName", po.getProduct().getProductName());
-                item.put("unitPrice", po.getProduct().getUnitPrice());
-                item.put("quantity", po.getQuantity());
-                double itemTotalPrice = po.getProduct().getUnitPrice() * po.getQuantity();
-                item.put("subtotal", String.format("%.2f", itemTotalPrice));
-                items.add(item);
-                totalPrice += itemTotalPrice;
-            }
-
-            String formattedTotalPrice = String.format("%.2f", totalPrice);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("totalPrice", formattedTotalPrice);
-            response.put("items", items);
-            return ResponseEntity.ok().body(response);
-        } else {
-            return ResponseEntity.ok().body("You have no items in your cart.");
-        }
+        ResponseEntity<?> responseEntity = orderService.getCart(userId);
+        return responseEntity;
     }
 
 
-
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/{orderId}")
     public ResponseEntity<?> updateOrder(
             @PathVariable int orderId,
@@ -179,42 +133,18 @@ public class OrderController {
             HttpServletRequest request
     ) {
         int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
-        Order order = orderService.loadOrderById(orderId);
-        if (order.getUserId()!=userId) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new MessageResponse("You are not authorized to update this order."));
-        }
-        try {
-            orderService.updateOrder(orderId, updatedOrder);
-            return ResponseEntity.ok().body(new MessageResponse("Order updated successfully."));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("Error updating the order."));
-        }
+        ResponseEntity<?> responseEntity = orderService.updateOrder(orderId, updatedOrder, userId);
+        return responseEntity;
     }
+
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<?> cancelOrder(
             @PathVariable int orderId,
             HttpServletRequest request
     ) {
         int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
-        Order order = orderService.loadOrderById(orderId);
-
-        if (order == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new MessageResponse("No order found with id " + orderId));
-        }
-        if (order.getUserId() != userId) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new MessageResponse("You are not authorized to cancel this order."));
-        }
-        try {
-            orderService.cancelOrder(orderId);
-            return ResponseEntity.ok().body(new MessageResponse("Order cancelled successfully."));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("Error cancelling the order."));
-        }
+        ResponseEntity<?> responseEntity = orderService.cancelOrder(orderId, userId);
+        return responseEntity;
     }
 
     @PreAuthorize("hasAnyRole('ADMIN')")
@@ -266,9 +196,9 @@ public class OrderController {
         try {
             orderService.deleteOrder(orderId);
             return ResponseEntity.ok().body(new MessageResponse("Order deleted successfully."));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("Error deleting the order."));
+        } catch (OrderNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("No order found with id "+orderId+". It may have already been deleted."));
         }
     }
 
