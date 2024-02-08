@@ -1,6 +1,7 @@
 package com.startsteps.Final.Project.ECommerce.OrderManagement.controller;
 
 
+import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InsufficientStockException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InvalidOrderStateException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.OrderNotFoundException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.ProductNotFoundException;
@@ -110,14 +111,18 @@ public class OrderController {
             int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
             orderService.addToCart(userId, cartRequest.getProductId(), cartRequest.getQuantity());
             return ResponseEntity.ok().body(new MessageResponse("Product added to the cart successfully."));
+        } catch (InsufficientStockException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse(e.getMessage()));
         } catch (ProductNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new MessageResponse("No product found with product id "+cartRequest.getProductId()));
+                    .body(new MessageResponse("No product found with product id " + cartRequest.getProductId()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new MessageResponse("Error adding product to cart."));
         }
     }
+
 
     @PostMapping("/remove")
     public ResponseEntity<?> removeFromCart(HttpServletRequest request, @RequestBody CartRequest cartRequest) {

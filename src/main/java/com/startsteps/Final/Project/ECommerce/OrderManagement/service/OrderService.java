@@ -1,5 +1,6 @@
 package com.startsteps.Final.Project.ECommerce.OrderManagement.service;
 
+import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InsufficientStockException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InvalidOrderStateException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.OrderNotFoundException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.ProductNotFoundException;
@@ -75,6 +76,12 @@ public class OrderService {
 
     @Transactional
     public void addToCart(int userId, int productId, int quantity) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+        if (product.getStockCount() < quantity) {
+            throw new InsufficientStockException("Insufficient stock for " + product.getProductName()+". Only "+product.getStockCount()+" available.");
+        }
+
         Order existingOrder = orderRepository.findByUserIdAndOrderStatus(userId, OrderStatus.IN_CART)
                 .stream()
                 .findFirst()
@@ -83,20 +90,21 @@ public class OrderService {
                     orderRepository.save(newOrder);
                     return newOrder;
                 });
+
         ProductsOrders existingProductOrder = existingOrder.getProductsOrders().stream()
                 .filter(po -> po.getProduct().getProductId() == productId)
                 .findFirst()
                 .orElse(null);
+
         if (existingProductOrder != null) {
             existingProductOrder.setQuantity(existingProductOrder.getQuantity() + quantity);
         } else {
-            Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new ProductNotFoundException("Product not found"));
             ProductsOrders newProductOrder = new ProductsOrders(existingOrder, product, quantity);
             existingOrder.addProductOrder(newProductOrder);
         }
         orderRepository.save(existingOrder);
     }
+
 
 
     @Transactional
@@ -142,6 +150,12 @@ public class OrderService {
             throw new OrderNotFoundException("No order found with id " + orderId);
         } else {
             if (order.getOrderStatus() == OrderStatus.SHIPPED) {
+                for (ProductsOrders productsOrders : order.getProductsOrders()) {
+                    Product product = productsOrders.getProduct();
+                    int returnedQuantity = productsOrders.getQuantity();
+                    product.setStockCount(product.getStockCount() + returnedQuantity); // Increase the stock count
+                    productRepository.save(product);
+                }
                 order.setOrderStatus(OrderStatus.RETURNED);
                 orderRepository.save(order);
             } else if (order.getOrderStatus() == OrderStatus.COMPLETED) {
@@ -192,13 +206,27 @@ public class OrderService {
         }
     }
 
+    @Transactional
     public void checkoutOrder(int orderId) {
         Order order = orderRepository.findById(orderId).orElse(null);
-
         if (order != null && order.getOrderStatus() == OrderStatus.IN_CART) {
+            List<ProductsOrders> productOrders = order.getProductsOrders();
+            for (ProductsOrders po : productOrders) {
+                Product product = po.getProduct();
+                int orderedQuantity = po.getQuantity();
+                int availableQuantity = product.getStockCount();
+
+                if (orderedQuantity > availableQuantity) {
+                    throw new InsufficientStockException("Insufficient stock for product: " + product.getProductName());
+                }
+                product.setStockCount(availableQuantity - orderedQuantity);
+                productRepository.save(product);
+            }
+
             order.setOrderStatus(OrderStatus.PROCESSING);
             order.setOrderDate(LocalDateTime.now());
             orderRepository.save(order);
         }
     }
+
 }
