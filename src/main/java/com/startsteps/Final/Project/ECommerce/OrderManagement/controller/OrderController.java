@@ -1,8 +1,10 @@
 package com.startsteps.Final.Project.ECommerce.OrderManagement.controller;
 
 
+import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InsufficientStockException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.InvalidOrderStateException;
 import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.OrderNotFoundException;
+import com.startsteps.Final.Project.ECommerce.ExceptionHandling.CustomExceptions.ProductNotFoundException;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.Order;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.OrderStatus;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.ProductsOrders;
@@ -28,7 +30,9 @@ import org.springframework.web.bind.annotation.*;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -107,11 +111,18 @@ public class OrderController {
             int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
             orderService.addToCart(userId, cartRequest.getProductId(), cartRequest.getQuantity());
             return ResponseEntity.ok().body(new MessageResponse("Product added to the cart successfully."));
+        } catch (InsufficientStockException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse(e.getMessage()));
+        } catch (ProductNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("No product found with product id " + cartRequest.getProductId()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("Error adding product to the cart."));
+                    .body(new MessageResponse("Error adding product to cart."));
         }
     }
+
 
     @PostMapping("/remove")
     public ResponseEntity<?> removeFromCart(HttpServletRequest request, @RequestBody CartRequest cartRequest) {
@@ -119,7 +130,10 @@ public class OrderController {
             int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
             orderService.removeFromCart(userId, cartRequest.getProductId());
             return ResponseEntity.ok().body(new MessageResponse("Product removed from cart successfully."));
-        } catch (Exception e) {
+        } catch (ProductNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("Product id "+cartRequest.getProductId()+" doesn't exist or is not in cart"));
+        }catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new MessageResponse("Error removing product from the cart."));
         }
@@ -131,13 +145,32 @@ public class OrderController {
         Order cart = orderService.viewCart(userId);
 
         if (cart != null) {
-            CartResponse cartResponse = new CartResponse("In cart:", cart.getProductsOrders());
-            String cartItemsString = cartResponse.toString();
-            return ResponseEntity.ok().body(new MessageResponse(cartItemsString));
+            List<Map<String, Object>> items = new ArrayList<>();
+            double totalPrice = 0.0;
+
+            for (ProductsOrders po : cart.getProductsOrders()) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("productName", po.getProduct().getProductName());
+                item.put("unitPrice", po.getProduct().getUnitPrice());
+                item.put("quantity", po.getQuantity());
+                double itemTotalPrice = po.getProduct().getUnitPrice() * po.getQuantity();
+                item.put("subtotal", String.format("%.2f", itemTotalPrice));
+                items.add(item);
+                totalPrice += itemTotalPrice;
+            }
+
+            String formattedTotalPrice = String.format("%.2f", totalPrice);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("totalPrice", formattedTotalPrice);
+            response.put("items", items);
+            return ResponseEntity.ok().body(response);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok().body("You have no items in your cart.");
         }
     }
+
+
 
     @PutMapping("/{orderId}")
     public ResponseEntity<?> updateOrder(
