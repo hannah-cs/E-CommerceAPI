@@ -28,6 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -69,11 +70,10 @@ public class OrderController {
     //accepts status param e.g. ?status=PROCESSING to filter orders by status. returns all if none propvided
     @GetMapping
     public ResponseEntity<?> getMyOrders(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestParam(required = false) OrderStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         int userId = userDetails.getId();
 
         return orderService.getMyOrders(userId, status, page, size);
@@ -81,9 +81,9 @@ public class OrderController {
 
 
     @PutMapping("/checkout")
-    public ResponseEntity<?> checkoutCart() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+    public ResponseEntity<?> checkoutCart(
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
         int userId = userDetails.getId();
         return orderService.checkoutOrder(userId);
     }
@@ -91,9 +91,7 @@ public class OrderController {
 
 
     @PostMapping("/add")
-    public ResponseEntity<?> addToCart(@RequestBody CartRequest cartRequest) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+    public ResponseEntity<?> addToCart(@RequestBody CartRequest cartRequest, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         int userId = userDetails.getId();
 
         try {
@@ -113,10 +111,8 @@ public class OrderController {
 
 
     @PostMapping("/remove")
-    public ResponseEntity<?> removeFromCart(@RequestBody CartRequest cartRequest) {
+    public ResponseEntity<?> removeFromCart(@RequestBody CartRequest cartRequest, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             int userId = userDetails.getId();
             orderService.removeFromCart(userId, cartRequest.getProductId());
             return ResponseEntity.ok().body(new MessageResponse("Product removed from cart successfully."));
@@ -130,9 +126,7 @@ public class OrderController {
     }
 
     @GetMapping("/cart")
-    public ResponseEntity<?> getCart() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+    public ResponseEntity<?> getCart(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         int userId = userDetails.getId();
         ResponseEntity<?> responseEntity = orderService.getCart(userId);
         return responseEntity;
@@ -145,19 +139,15 @@ public class OrderController {
             @PathVariable int orderId,
             @RequestBody Order updatedOrder
     ) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        int userId = userDetails.getId();
-        ResponseEntity<?> responseEntity = orderService.updateOrder(orderId, updatedOrder, userId);
+        ResponseEntity<?> responseEntity = orderService.updateOrder(orderId, updatedOrder);
         return responseEntity;
     }
 
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<?> cancelOrder(
-            @PathVariable int orderId
+            @PathVariable int orderId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         int userId = userDetails.getId();
         ResponseEntity<?> responseEntity = orderService.cancelOrder(orderId, userId);
         return responseEntity;
@@ -182,9 +172,7 @@ public class OrderController {
     }
 
     @PostMapping("/{orderId}/return")
-    public ResponseEntity<?> returnOrder(@PathVariable int orderId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+    public ResponseEntity<?> returnOrder(@PathVariable int orderId, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         int userId = userDetails.getId();
         Order order = orderService.loadOrderById(orderId);
 

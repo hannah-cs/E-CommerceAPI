@@ -113,15 +113,11 @@ public class OrderService {
     }
 
     @Transactional
-    public ResponseEntity<?> updateOrder(int id, Order updatedOrder, int userId) {
+    public ResponseEntity<?> updateOrder(int id, Order updatedOrder) {
         Order order = orderRepository.findById(id).orElse(null);
         if (order == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new MessageResponse("Order not found."));
-        }
-        if (order.getUserId() != userId) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new MessageResponse("You are not authorized to update this order."));
         }
         try {
             order.setOrderDate(updatedOrder.getOrderDate());
