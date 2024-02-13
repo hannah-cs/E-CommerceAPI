@@ -3,6 +3,7 @@ package com.startsteps.Final.Project.ECommerce.security.login.services;
 import com.startsteps.Final.Project.ECommerce.security.login.models.ERole;
 import com.startsteps.Final.Project.ECommerce.security.login.models.Role;
 import com.startsteps.Final.Project.ECommerce.security.login.models.User;
+import com.startsteps.Final.Project.ECommerce.security.login.models.UserProfile;
 import com.startsteps.Final.Project.ECommerce.security.login.repository.RoleRepository;
 import com.startsteps.Final.Project.ECommerce.security.login.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,13 +53,8 @@ public class UserService {
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            Map<String, Object> userProfile = new HashMap<>();
-            userProfile.put("userId", user.getUserId());
-            userProfile.put("name", user.getName());
-            userProfile.put("username", user.getUsername());
-            userProfile.put("email", user.getEmail());
-            userProfile.put("roles", user.getRoles().stream().map(role -> role.getName().toString()).collect(Collectors.toSet()));
-            return ResponseEntity.ok().body(userProfile);
+            UserProfile userProfile = new UserProfile(user.getUserId(), user.getUsername(), user.getEmail(), user.getName());
+            return ResponseEntity.ok().body("User profile. \n"+userProfile.toString());
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("User not found");
