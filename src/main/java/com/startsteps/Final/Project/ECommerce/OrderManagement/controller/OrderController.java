@@ -16,6 +16,7 @@ import com.startsteps.Final.Project.ECommerce.security.login.jwt.JwtUtils;
 import com.startsteps.Final.Project.ECommerce.security.login.models.User;
 import com.startsteps.Final.Project.ECommerce.security.login.payload.response.MessageResponse;
 import com.startsteps.Final.Project.ECommerce.security.login.repository.UserRepository;
+import com.startsteps.Final.Project.ECommerce.security.login.services.UserDetailsImpl;
 import com.startsteps.Final.Project.ECommerce.security.login.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -65,28 +69,34 @@ public class OrderController {
     //accepts status param e.g. ?status=PROCESSING to filter orders by status. returns all if none propvided
     @GetMapping
     public ResponseEntity<?> getMyOrders(
-            HttpServletRequest request,
             @RequestParam(required = false) OrderStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        int userId = userDetails.getId();
 
-        int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
         return orderService.getMyOrders(userId, status, page, size);
     }
 
 
     @PutMapping("/checkout")
-    public ResponseEntity<?> checkoutCart(HttpServletRequest request) {
-        int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
+    public ResponseEntity<?> checkoutCart() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        int userId = userDetails.getId();
         return orderService.checkoutOrder(userId);
     }
 
 
 
     @PostMapping("/add")
-    public ResponseEntity<?> addToCart(HttpServletRequest request, @RequestBody CartRequest cartRequest) {
+    public ResponseEntity<?> addToCart(@RequestBody CartRequest cartRequest) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        int userId = userDetails.getId();
+
         try {
-            int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
             orderService.addToCart(userId, cartRequest.getProductId(), cartRequest.getQuantity());
             return ResponseEntity.ok().body(new MessageResponse("Product added to the cart successfully."));
         } catch (InsufficientStockException e) {
@@ -103,9 +113,11 @@ public class OrderController {
 
 
     @PostMapping("/remove")
-    public ResponseEntity<?> removeFromCart(HttpServletRequest request, @RequestBody CartRequest cartRequest) {
+    public ResponseEntity<?> removeFromCart(@RequestBody CartRequest cartRequest) {
         try {
-            int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            int userId = userDetails.getId();
             orderService.removeFromCart(userId, cartRequest.getProductId());
             return ResponseEntity.ok().body(new MessageResponse("Product removed from cart successfully."));
         } catch (ProductNotFoundException e) {
@@ -118,8 +130,10 @@ public class OrderController {
     }
 
     @GetMapping("/cart")
-    public ResponseEntity<?> getCart(HttpServletRequest request) {
-        int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
+    public ResponseEntity<?> getCart() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        int userId = userDetails.getId();
         ResponseEntity<?> responseEntity = orderService.getCart(userId);
         return responseEntity;
     }
@@ -129,20 +143,22 @@ public class OrderController {
     @PutMapping("/{orderId}")
     public ResponseEntity<?> updateOrder(
             @PathVariable int orderId,
-            @RequestBody Order updatedOrder,
-            HttpServletRequest request
+            @RequestBody Order updatedOrder
     ) {
-        int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        int userId = userDetails.getId();
         ResponseEntity<?> responseEntity = orderService.updateOrder(orderId, updatedOrder, userId);
         return responseEntity;
     }
 
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<?> cancelOrder(
-            @PathVariable int orderId,
-            HttpServletRequest request
+            @PathVariable int orderId
     ) {
-        int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        int userId = userDetails.getId();
         ResponseEntity<?> responseEntity = orderService.cancelOrder(orderId, userId);
         return responseEntity;
     }
@@ -166,8 +182,10 @@ public class OrderController {
     }
 
     @PostMapping("/{orderId}/return")
-    public ResponseEntity<?> returnOrder(@PathVariable int orderId, HttpServletRequest request) {
-        int userId = jwtUtils.getUserIdFromJwtToken(jwtUtils.getJwtFromCookies(request));
+    public ResponseEntity<?> returnOrder(@PathVariable int orderId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        int userId = userDetails.getId();
         Order order = orderService.loadOrderById(orderId);
 
         if (order == null) {

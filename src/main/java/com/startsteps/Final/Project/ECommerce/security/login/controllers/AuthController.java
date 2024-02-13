@@ -105,30 +105,27 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getUserProfile(HttpServletRequest request) {
-        String jwt = jwtUtils.getJwtFromCookies(request);
-        if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-            String username = jwtUtils.getUserNameFromJwtToken(jwt);
-            Optional<User> userOptional = userRepository.findByUsername(username);
-            if (userOptional.isPresent()) {
-                User user = userOptional.get();
-                String userProfile = String.format("Logged in as %s (user ID: %d), with roles %s",
-                        user.getUsername(), user.getUserId(), user.getRoles().toString());
-                return ResponseEntity.ok().body(userProfile);
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("User not found");
-            }
+    public ResponseEntity<?> getUserProfile() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String username = userDetails.getUsername();
+
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            String userProfile = String.format("Logged in as %s (user ID: %d), with roles %s",
+                    user.getUsername(), user.getUserId(), user.getRoles().toString());
+            return ResponseEntity.ok().body(userProfile);
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("You must be logged in to access this feature.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found");
         }
     }
 
 
     @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/grantAdmin/{id}")
-    public ResponseEntity<?> makeAdmin(@PathVariable("id") Integer id, HttpServletRequest request) {
+    public ResponseEntity<?> makeAdmin(@PathVariable("id") Integer id) {
         User toMakeAdmin = userRepository.findById(id).orElse(null);
         if (toMakeAdmin != null) {
             userService.makeAdmin(id);
