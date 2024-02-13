@@ -31,6 +31,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -117,15 +118,15 @@ public class AuthController {
                         .body("User not found");
             }
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("You must be logged in to access this feature.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found");
         }
     }
 
 
     @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/grantAdmin/{id}")
-    public ResponseEntity<?> makeAdmin(@PathVariable("id") Integer id, HttpServletRequest request) {
+    public ResponseEntity<?> makeAdmin(@PathVariable("id") Integer id) {
         User toMakeAdmin = userRepository.findById(id).orElse(null);
         if (toMakeAdmin != null) {
             userService.makeAdmin(id);
