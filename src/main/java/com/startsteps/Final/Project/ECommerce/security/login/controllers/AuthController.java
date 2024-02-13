@@ -31,6 +31,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -105,20 +106,25 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public String getUserProfile(HttpServletRequest request) {
-        String jwt = jwtUtils.getJwtFromCookies(request);
-        if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-            String username = jwtUtils.getUserNameFromJwtToken(jwt);
-            Optional<User> user = userRepository.findByUsername(username);
-            return user.toString();
+    public ResponseEntity<?> getUserProfile(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        String username = userDetails.getUsername();
+
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            String userProfile = String.format("Logged in as %s (user ID: %d), with roles %s",
+                    user.getUsername(), user.getUserId(), user.getRoles().toString());
+            return ResponseEntity.ok().body(userProfile);
         } else {
-            return "You must be logged in to access this feature.";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found");
         }
     }
 
+
     @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/grantAdmin/{id}")
-    public ResponseEntity<?> makeAdmin(@PathVariable("id") Integer id, HttpServletRequest request) {
+    public ResponseEntity<?> makeAdmin(@PathVariable("id") Integer id) {
         User toMakeAdmin = userRepository.findById(id).orElse(null);
         if (toMakeAdmin != null) {
             userService.makeAdmin(id);
@@ -135,7 +141,7 @@ public class AuthController {
         User toRemoveAdmin = userRepository.findById(id).orElse(null);
         if (toRemoveAdmin != null) {
             userService.setERoleAndRoles(id, ERole.USER);
-            return ResponseEntity.ok().body(new MessageResponse("Removed admin privileges for user " + toRemoveAdmin.getUsername() + "."));
+            return ResponseEntity.ok().body(new MessageResponse("Removed admin privileges from user " + toRemoveAdmin.getUsername() + "."));
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new MessageResponse("User not found with id: " + id));

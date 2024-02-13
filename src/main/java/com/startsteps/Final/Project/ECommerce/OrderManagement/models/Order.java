@@ -92,7 +92,6 @@ public class Order {
 
     public void removeProductOrder(ProductsOrders productsOrder) {
         this.productsOrders.remove(productsOrder);
-        productsOrder.setOrder(null);
     }
 
     public double calculateTotalPrice() {
