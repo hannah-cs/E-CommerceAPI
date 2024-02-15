@@ -3,6 +3,7 @@ package com.startsteps.Final.Project.ECommerce.security.login.services;
 import com.startsteps.Final.Project.ECommerce.security.login.models.ERole;
 import com.startsteps.Final.Project.ECommerce.security.login.models.Role;
 import com.startsteps.Final.Project.ECommerce.security.login.models.User;
+import com.startsteps.Final.Project.ECommerce.security.login.models.UserProfile;
 import com.startsteps.Final.Project.ECommerce.security.login.repository.RoleRepository;
 import com.startsteps.Final.Project.ECommerce.security.login.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -115,15 +116,19 @@ class UserServiceTest {
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertNotNull(responseEntity.getBody());
-        assertTrue(responseEntity.getBody() instanceof Map);
+        assertTrue(responseEntity.getBody() instanceof String);
 
-        Map<String, Object> userProfile = (Map<String, Object>) responseEntity.getBody();
-        assertEquals(user.getUserId(), userProfile.get("userId"));
-        assertEquals(user.getName(), userProfile.get("name"));
-        assertEquals(user.getUsername(), userProfile.get("username"));
-        assertEquals(user.getEmail(), userProfile.get("email"));
-        assertTrue(userProfile.containsKey("roles"));
-        assertTrue(userProfile.get("roles") instanceof Set);
-        assertEquals(Collections.singleton(ERole.USER.name()), userProfile.get("roles"));
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertNotNull(responseEntity.getBody());
+        assertTrue(responseEntity.getBody() instanceof String);
+
+        String responseBody = (String) responseEntity.getBody();
+        String expectedResponseBody = "User profile. \n" +
+                "User ID: " + user.getUserId() + "\n" +
+                "Username: " + user.getUsername() + "\n" +
+                "Email: " + user.getEmail() + "\n" +
+                "Name: " + user.getName();
+
+        assertEquals(expectedResponseBody, responseBody);
     }
 }
