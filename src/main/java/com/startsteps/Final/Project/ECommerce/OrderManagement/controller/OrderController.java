@@ -186,7 +186,7 @@ public class OrderController {
         }
         try {
             orderService.returnOrder(orderId);
-            return ResponseEntity.ok().body(new MessageResponse("Return process successfully started."));
+            return ResponseEntity.ok().body(new MessageResponse("Return process successfully started. Your refund of €"+order.calculateTotalPrice()+"will be credited to the payment method you used when purchasing the returned items. It may take up to 5 working days to clear depending on your bank."));
         } catch (InvalidOrderStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new MessageResponse(e.getMessage()));

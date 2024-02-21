@@ -8,6 +8,7 @@ import com.startsteps.Final.Project.ECommerce.OrderManagement.models.Order;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.OrderStatus;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.models.ProductsOrders;
 import com.startsteps.Final.Project.ECommerce.OrderManagement.repository.OrderRepository;
+import com.startsteps.Final.Project.ECommerce.OrderManagement.repository.ProductsOrdersRepository;
 import com.startsteps.Final.Project.ECommerce.ProductManagement.models.Product;
 import com.startsteps.Final.Project.ECommerce.ProductManagement.repository.ProductRepository;
 import com.startsteps.Final.Project.ECommerce.security.login.models.User;
@@ -33,6 +34,7 @@ public class OrderService {
     OrderRepository orderRepository;
     @Autowired
     ProductRepository productRepository;
+
     @Transactional
     public Order loadOrderById(Integer orderId) throws OrderNotFoundException {
         Optional<Order> optionalOrder = orderRepository.findById(orderId);
@@ -181,15 +183,26 @@ public class OrderService {
                     orderRepository.save(newOrder);
                     return newOrder;
                 });
+
         ProductsOrders existingProductOrder = existingOrder.getProductsOrders().stream()
                 .filter(po -> po.getProduct().getProductId() == productId)
                 .findFirst()
                 .orElse(null);
+
         if (existingProductOrder != null) {
-            existingProductOrder.setQuantity(existingProductOrder.getQuantity()-1);
+            if (existingProductOrder.getQuantity() > 1) {
+                existingProductOrder.setQuantity(existingProductOrder.getQuantity() - 1);
+            } else {
+                existingOrder.removeProductOrder(existingProductOrder);
+            }
         }
+
         orderRepository.save(existingOrder);
     }
+
+
+
+
 
     @Transactional
     public ResponseEntity<?> cancelOrder(int orderId, int userId) {
@@ -204,6 +217,9 @@ public class OrderService {
         }
         if (order.getOrderStatus() == OrderStatus.CANCELLED) {
             return ResponseEntity.ok().body(new MessageResponse("Order already cancelled."));
+        }
+        if (order.getOrderStatus() == OrderStatus.RETURNED) {
+            return ResponseEntity.ok().body(new MessageResponse("This order has been returned and may not be cancelled."));
         }
         if (order.getOrderStatus() == OrderStatus.SHIPPED) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -267,11 +283,10 @@ public class OrderService {
             LocalDateTime shipDate = order.getShipDate();
             LocalDateTime currentDate = LocalDateTime.now();
             long daysDifference = ChronoUnit.DAYS.between(shipDate, currentDate);
-            int daysThreshold = 30;
+            int daysThreshold = 100;
             if (daysDifference >= daysThreshold) {
                 order.setOrderStatus(OrderStatus.COMPLETED);
                 orderRepository.save(order);
-                System.out.println("Order " + order.getOrderId() + " automatically marked as completed. Return window closed.");
             }
         }
     }
