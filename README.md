@@ -2,9 +2,7 @@
 
 ## Description
 
-Simple yet functional e-commerce shop. The application serves as a backend system, handling everything from product management to order processing.
-
-This API will interact with front-end applications, allowing users to browse products, add them to a cart, and place orders.
+The E-Commerce Shop RESTful API is a simple backend system designed to manage various aspects of an online store, from product inventory to order fulfillment. It provides functionalities for users to browse products, add items to their carts, and complete orders seamlessly.
 
 ## Table of Contents
 
@@ -14,42 +12,31 @@ This API will interact with front-end applications, allowing users to browse pro
 
 ## Installation
 
-- Clone this repository
-- Run locally
-- Access Postman collection [here](https://www.postman.com/payload-astronaut-23412629/workspace/hannah-startsteps/collection/31451012-710c9f61-2574-4af3-8801-1ca8dd0e70b2?action=share&creator=31451012)
+To set up the E-Commerce Shop API locally, follow these steps:
+
+1. Clone this repository to your local machine.
+2. Navigate to the project directory.
+3. Install dependencies by running `npm install`.
+4. Start the server by executing `npm start`.
+5. Access the API endpoints via localhost.
+
+You can use the Postman collection provided [here](https://www.postman.com/payload-astronaut-23412629/workspace/hannah-startsteps/collection/31451012-710c9f61-2574-4af3-8801-1ca8dd0e70b2?action=share&creator=31451012) to interact with the API.
 
 ## Usage
 
-Swagger API documentation can be found [here](http://localhost:8080/swagger-ui/index.html) after running code locally. Endpoints also included in [Postman collection.](https://www.postman.com/payload-astronaut-23412629/workspace/hannah-startsteps/collection/31451012-710c9f61-2574-4af3-8801-1ca8dd0e70b2?action=share&creator=31451012)
+Once the server is running locally, you can explore the API's functionalities:
 
-Some features are restricted to users with admin rights only. Admin privileges can only be granted by existing admin users.
+- Utilize the Swagger API documentation available [here](http://localhost:8080/swagger-ui/index.html) once the application is running locally for detailed information about available endpoints, request parameters, and responses.
+- Alternatively, refer to the provided [Postman collection](https://www.postman.com/payload-astronaut-23412629/workspace/hannah-startsteps/collection/31451012-710c9f61-2574-4af3-8801-1ca8dd0e70b2?action=share&creator=31451012) for a curated set of API requests.
 
-Admins may create and update products, as well as ship orders.
+Key features include:
 
-Users can browse products and create orders.
-
-Shipped orders will be automatically marked as "completed" after 100 days and may no longer be returned.
+- **Cart and order management:** Users can browse products, add items to their carts, and place orders.
+- **Admin privileges:** Admin users have additional functionalities, such as product creation, updating, and order shipment.
+- **Return window:** Orders are automatically marked as "completed" after 100 days from shipment and are no longer eligible for returns.
 
 ## License
 
-MIT License
+This project is licensed under the [MIT License](LICENSE), which allows for free use, modification, and distribution of the software. See the [LICENSE](LICENSE) file for more details.
 
-Copyright (c) 2024 Hannah Carey Smyth
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Copyright © 2024 Hannah Carey Smyth
