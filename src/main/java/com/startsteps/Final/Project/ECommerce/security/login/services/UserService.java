@@ -51,7 +51,7 @@ public class UserService {
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            UserProfile userProfile = new UserProfile(user.getUserId(), user.getUsername(), user.getEmail(), user.getName());
+            UserProfile userProfile = new UserProfile(user.getUserId(), user.getUsername(), user.getEmail(), user.getERole());
             return ResponseEntity.ok().body("User profile. \n" + userProfile.toString());
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -63,7 +63,7 @@ public class UserService {
         List<User> users = userRepository.findAll();
         List<UserProfile> result = new ArrayList<>();
         for (User user : users) {
-            UserProfile userProfile = new UserProfile(user.getUserId(), user.getUsername(), user.getEmail(), user.getName());
+            UserProfile userProfile = new UserProfile(user.getUserId(), user.getUsername(), user.getEmail(), user.getERole());
             result.add(userProfile);
         }
         return result;

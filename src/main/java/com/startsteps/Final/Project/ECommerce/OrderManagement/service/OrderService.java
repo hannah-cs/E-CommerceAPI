@@ -90,7 +90,7 @@ public class OrderService {
     }
 
     public ResponseEntity<?> getAllOrders(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page-1, size);
         Page<Order> orders = orderRepository.findAll(pageable);
 
         List<Map<String, Object>> orderList = orders.getContent().stream()
@@ -199,9 +199,6 @@ public class OrderService {
 
         orderRepository.save(existingOrder);
     }
-
-
-
 
 
     @Transactional

@@ -1,16 +1,19 @@
 package com.startsteps.Final.Project.ECommerce.security.login.models;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class UserProfile {
     private Integer userId;
     private String username;
     private String email;
-    private String name;
+    private ERole eRole;
 
-    public UserProfile(Integer userId, String username, String email, String name) {
+    public UserProfile(Integer userId, String username, String email, ERole eRole) {
         this.userId = userId;
         this.username = username;
         this.email = email;
-        this.name = name;
+        this.eRole = eRole;
     }
 
     public Integer getUserId() {
@@ -37,12 +40,12 @@ public class UserProfile {
         this.email = email;
     }
 
-    public String getName() {
-        return name;
+    public ERole geteRole() {
+        return eRole;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void seteRole(ERole eRole) {
+        this.eRole = eRole;
     }
 
     @Override
@@ -50,6 +53,6 @@ public class UserProfile {
         return "User ID: "+userId+
                 "\nUsername: "+username+
                 "\nEmail: "+email+
-                "\nName: "+name;
+                "\nRoles: "+geteRole();
     }
 }
