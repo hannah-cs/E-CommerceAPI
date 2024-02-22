@@ -27,9 +27,19 @@ public class UserService {
         User user = userRepository.findById(userId).orElse(null);
         if (user != null) {
             user.setERole(eRole);
-            Role correspondingRole = roleRepository.findByName(eRole).orElse(null);
-            if (correspondingRole != null) {
-                user.getRoles().add(correspondingRole);
+            if (eRole == ERole.ADMIN) {
+                Role correspondingRole = roleRepository.findByName(eRole).orElse(null);
+                if (correspondingRole != null) {
+                    user.getRoles().add(correspondingRole);
+                }
+            }
+            else if (eRole == ERole.USER){
+                Set<Role> roles = new HashSet<>();
+                Role correspondingRole = roleRepository.findByName(eRole).orElse(null);
+                if (correspondingRole != null) {
+                    roles.add(correspondingRole);
+                    user.setRoles(roles);
+                }
             }
             userRepository.save(user);
         }
