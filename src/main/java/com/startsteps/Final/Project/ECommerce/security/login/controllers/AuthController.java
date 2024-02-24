@@ -10,6 +10,7 @@ import com.startsteps.Final.Project.ECommerce.security.login.jwt.JwtUtils;
 import com.startsteps.Final.Project.ECommerce.security.login.models.ERole;
 import com.startsteps.Final.Project.ECommerce.security.login.models.Role;
 import com.startsteps.Final.Project.ECommerce.security.login.models.User;
+import com.startsteps.Final.Project.ECommerce.security.login.models.UserProfile;
 import com.startsteps.Final.Project.ECommerce.security.login.payload.request.LoginRequest;
 import com.startsteps.Final.Project.ECommerce.security.login.payload.request.SignupRequest;
 import com.startsteps.Final.Project.ECommerce.security.login.payload.response.MessageResponse;
@@ -149,4 +150,12 @@ public class AuthController {
                     .body(new MessageResponse("User not found with id: " + id));
         }
     }
+
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @GetMapping("/allUsers")
+    public ResponseEntity<?> getAllUsers(){
+        List<UserProfile> allUsers = userService.getAllUsers();
+        return ResponseEntity.ok().body(allUsers);
+    }
+
 }
